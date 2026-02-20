@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ProComitês - Validar presença</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <h1>Validar presença</h1>
+        <p id="subTitle">Informe seu CPF para registrar presença</p>
+      </div>
+      <span class="badge" id="reuniaoBadge">Reunião: -</span>
+    </header>
+
+    <div id="notice" class="notice hidden"></div>
+
+    <div class="card">
+      <div class="row">
+        <div class="field">
+          <label>CPF (apenas números)</label>
+          <input id="cpf" inputmode="numeric" placeholder="00000000000" />
+        </div>
+        <div style="align-self: flex-end;">
+          <button id="btnValidar" class="primary">Validar</button>
+        </div>
+      </div>
+
+      <div id="panelNovo" class="hidden" style="margin-top: 14px;">
+        <hr />
+        <div class="small" style="margin-bottom: 8px;">Não encontramos seu CPF para esta reunião. Preencha seus dados:</div>
+        <div class="row">
+          <div class="field">
+            <label>Nome</label>
+            <input id="nome" />
+          </div>
+          <div class="field">
+            <label>E-mail</label>
+            <input id="email" type="email" />
+          </div>
+        </div>
+        <div class="row" style="margin-top: 10px;">
+          <div class="field">
+            <label>Telefone</label>
+            <input id="telefone" />
+          </div>
+          <div class="field">
+            <label>Órgão</label>
+            <input id="orgao" />
+          </div>
+        </div>
+        <div class="row" style="margin-top: 10px; align-items: flex-end;">
+          <div class="field">
+            <label>Necessita diária?</label>
+            <select id="precisaDiaria">
+              <option value="NÃO">NÃO</option>
+              <option value="SIM">SIM</option>
+            </select>
+          </div>
+          <button id="btnSalvarNovo" class="primary">Salvar e gerar código</button>
+        </div>
+      </div>
+
+      <div id="panelCodigo" class="hidden" style="margin-top: 14px;">
+        <hr />
+        <div class="small">Seu código de autenticação:</div>
+        <div id="codigo" class="code" style="font-size: 22px; margin-top: 6px;"></div>
+      </div>
+    </div>
+
+    <div class="small" style="margin-top: 10px;">
+      Dica: se você já pré-confirmou, basta informar seu CPF para validar.
+    </div>
+  </div>
+
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

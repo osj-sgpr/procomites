@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ProComitês - Painel</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <h1>ProComitês</h1>
+        <p>Sistema de controle de reuniões (MVP)</p>
+      </div>
+      <div class="row">
+        <span id="authBadge" class="badge">Deslogado</span>
+        <button id="btnLogin" class="primary">Entrar com Google</button>
+        <button id="btnLogout" class="danger hidden">Sair</button>
+      </div>
+    </header>
+
+    <div id="notice" class="notice hidden"></div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="row" style="justify-content: space-between;">
+          <div>
+            <div class="small">Usuário</div>
+            <div id="userLine" style="font-weight: 600;">-</div>
+          </div>
+          <div class="row">
+            <button id="btnReload" class="hidden">Atualizar reuniões</button>
+          </div>
+        </div>
+
+        <hr />
+
+        <div id="panelAguardando" class="notice hidden">
+          Aguardando liberação do administrador.
+        </div>
+
+        <div id="panelPresidente" class="hidden">
+          <div class="row" style="justify-content: space-between; align-items: flex-end;">
+            <div>
+              <div class="small">Suas reuniões</div>
+              <div class="small">Crie reuniões e compartilhe o link público de confirmação</div>
+            </div>
+            <button id="btnToggleNova" class="primary">Nova reunião</button>
+          </div>
+
+          <div id="formNova" class="card hidden" style="margin-top: 12px;">
+            <div class="row">
+              <div class="field">
+                <label>Título</label>
+                <input id="nrTitulo" placeholder="Ex: Reunião Ordinária" />
+              </div>
+              <div class="field">
+                <label>Data</label>
+                <input id="nrData" type="date" />
+              </div>
+            </div>
+            <div class="row" style="margin-top: 10px;">
+              <div class="field">
+                <label>Tipo</label>
+                <select id="nrTipo">
+                  <option value="Presencial">Presencial</option>
+                  <option value="Online">Online</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Local (endereço ou link)</label>
+                <input id="nrLocal" placeholder="Ex: Auditório SEMARH ou https://..." />
+              </div>
+            </div>
+            <div class="row" style="margin-top: 10px; justify-content: flex-end;">
+              <button id="btnCriarReuniao" class="primary">Criar</button>
+            </div>
+          </div>
+
+          <div id="listaReunioes" class="list" style="margin-top: 12px;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight: 700; margin-bottom: 6px;">Reunião selecionada</div>
+        <div id="reuniaoSelecionada" class="small">Selecione uma reunião para ver confirmações e presenças.</div>
+
+        <div id="panelReuniao" class="hidden" style="margin-top: 10px;">
+          <div class="row" style="justify-content: space-between; align-items: center;">
+            <div>
+              <div class="small">Link público</div>
+              <div class="code" id="linkPublico" style="word-break: break-all;"></div>
+            </div>
+            <div class="row">
+              <button id="btnCopiarLink">Copiar</button>
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="row" style="justify-content: space-between; align-items: center;">
+            <div style="font-weight: 600;">Listas</div>
+            <button id="btnAtualizarListas">Atualizar lista</button>
+          </div>
+
+          <div style="margin-top: 10px;">
+            <div class="small">Pré-confirmados</div>
+            <table class="table" id="tblConfirmados">
+              <thead><tr><th>Nome</th><th>Órgão</th><th>Diária</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <div class="small">Presentes (validados)</div>
+            <table class="table" id="tblPresentes">
+              <thead><tr><th>Nome</th><th>CPF</th><th>Código</th><th>Horário</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <hr />
+
+          <div class="row" style="justify-content: space-between;">
+            <button id="btnRelatorio">Gerar relatório de diárias</button>
+            <button id="btnAta" class="primary">Cadastrar/Editar ATA</button>
+          </div>
+
+          <div id="panelAta" class="hidden" style="margin-top: 12px;">
+            <div class="small" style="margin-bottom: 8px;">Editor de ATA</div>
+            <div id="editorAta" class="card" style="min-height: 220px; padding: 10px;"></div>
+            <div class="row" style="margin-top: 10px; justify-content: flex-end;">
+              <button id="btnSalvarAta" class="primary">Salvar ATA</button>
+              <button id="btnCancelarAta">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./config.js"></script>
+  <script src="./firebase-config.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+  <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
