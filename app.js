@@ -15,8 +15,9 @@
   }
 
   async function api(payload) {
-    if (!window.APPS_SCRIPT_URL) throw new Error("APPS_SCRIPT_URL não configurada em config.js");
-    const res = await fetch(window.APPS_SCRIPT_URL, {
+    const url = window.APPS_SCRIPT_URL || (typeof APPS_SCRIPT_URL !== "undefined" ? APPS_SCRIPT_URL : "");
+    if (!url) throw new Error("APPS_SCRIPT_URL não configurada. Verifique se config.js foi publicado no GitHub Pages.");
+    const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload),
@@ -195,6 +196,7 @@
     let reunioes = [];
     let reuniaoAtual = null;
     let editor = null;
+    let idToken = null;
 
     function setAuthUI(logado) {
       if (logado) {
@@ -302,8 +304,9 @@
       setNotice(null, "");
       const email = user.email;
       const uid = user.uid;
+      idToken = await user.getIdToken();
 
-      const r = await api({ acao: "login", email, uid, nome: user.displayName || "" });
+      const r = await api({ acao: "login", idToken, email, uid, nome: user.displayName || "" });
       if (!r.autorizado) {
         panelPresidente.classList.add("hidden");
         panelAguardando.classList.remove("hidden");
@@ -330,7 +333,7 @@
     async function carregarReunioes() {
       if (!session) return;
       setNotice(null, "");
-      const r = await api({ acao: "listarReunioes", idUsuario: session.idUsuario });
+      const r = await api({ acao: "listarReunioes", idToken, idUsuario: session.idUsuario });
       reunioes = r.reunioes || [];
       renderReunioes();
     }
@@ -349,7 +352,7 @@
 
       btnCriarReuniao.disabled = true;
       try {
-        const r = await api({ acao: "criarReuniao", titulo, data, tipo, local, idPresidente: session.idUsuario });
+        const r = await api({ acao: "criarReuniao", idToken, titulo, data, tipo, local, idPresidente: session.idUsuario });
         if (r.sucesso) {
           setNotice("ok", "Reunião criada.");
           formNova.classList.add("hidden");
@@ -368,7 +371,7 @@
       if (!reuniaoAtual) return;
       btnRelatorio.disabled = true;
       try {
-        const r = await api({ acao: "gerarRelatorioDiarias", idReuniao: reuniaoAtual.idReuniao });
+        const r = await api({ acao: "gerarRelatorioDiarias", idToken, idReuniao: reuniaoAtual.idReuniao });
         if (r.sucesso && r.url) window.open(r.url, "_blank");
         else setNotice("err", r.mensagem || "Não foi possível gerar.");
       } catch (e) {
@@ -398,7 +401,7 @@
       btnSalvarAta.disabled = true;
       try {
         const html = editor.getData();
-        const r = await api({ acao: "salvarAta", idReuniao: reuniaoAtual.idReuniao, html });
+        const r = await api({ acao: "salvarAta", idToken, idReuniao: reuniaoAtual.idReuniao, html });
         if (r.sucesso) {
           setNotice("ok", "Ata salva.");
           panelAta.classList.add("hidden");
@@ -453,6 +456,7 @@
         reunioes = [];
         reuniaoAtual = null;
         session = null;
+        idToken = null;
         setNotice(null, "");
         return;
       }
