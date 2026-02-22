@@ -324,11 +324,51 @@
     const btnUploadAta = qs("btnUploadAta");
     const publicComiteTabs = qs("publicComiteTabs");
     const publicReunioesAbertas = qs("publicReunioesAbertas");
+    const publicHero = qs("publicHero");
+    const heroTitulo = qs("heroTitulo");
+    const heroSubtitulo = qs("heroSubtitulo");
+    const heroBotao = qs("heroBotao");
+    const publicUltimasNoticias = qs("publicUltimasNoticias");
+    const publicContatoTitulo = qs("publicContatoTitulo");
+    const publicContatoTexto = qs("publicContatoTexto");
+    const publicContatoEmail = qs("publicContatoEmail");
+    const publicContatoTelefone = qs("publicContatoTelefone");
+    const publicContatoEndereco = qs("publicContatoEndereco");
+
+    const panelPortalGestao = qs("panelPortalGestao");
+    const cfgBannerTitulo = qs("cfgBannerTitulo");
+    const cfgBannerSubtitulo = qs("cfgBannerSubtitulo");
+    const cfgBannerImagem = qs("cfgBannerImagem");
+    const cfgBannerBotaoTexto = qs("cfgBannerBotaoTexto");
+    const cfgBannerBotaoUrl = qs("cfgBannerBotaoUrl");
+    const cfgContatoTitulo = qs("cfgContatoTitulo");
+    const cfgContatoTexto = qs("cfgContatoTexto");
+    const cfgContatoEmail = qs("cfgContatoEmail");
+    const cfgContatoTelefone = qs("cfgContatoTelefone");
+    const cfgContatoEndereco = qs("cfgContatoEndereco");
+    const btnSalvarPortalConfig = qs("btnSalvarPortalConfig");
+
+    const btnNovaNoticia = qs("btnNovaNoticia");
+    const formNoticia = qs("formNoticia");
+    const notTitulo = qs("notTitulo");
+    const notComite = qs("notComite");
+    const notResumo = qs("notResumo");
+    const notImagem = qs("notImagem");
+    const notData = qs("notData");
+    const notStatus = qs("notStatus");
+    const notDestaqueHome = qs("notDestaqueHome");
+    const editorNoticiaEl = qs("editorNoticia");
+    const btnSalvarNoticia = qs("btnSalvarNoticia");
+    const btnCancelarNoticia = qs("btnCancelarNoticia");
+    const listaNoticiasGestao = qs("listaNoticiasGestao");
 
     let session = null; // { idUsuario, perfil, nome, comite, email }
     let reunioes = [];
     let reuniaoAtual = null;
     let editor = null;
+    let noticiaEditor = null;
+    let noticiaAtualId = null;
+    let portalConfigAtual = null;
     let idToken = null;
 
     const COMITES = [
@@ -340,6 +380,304 @@
       "CBH Coco e Caiapó",
     ];
     let comitePublicoAtivo = COMITES[0] || "";
+
+    function getPortalDefaults() {
+      return {
+        homeBannerTitulo: "Comitês de Bacias Hidrográficas do Estado do Tocantins",
+        homeBannerSubtitulo: "Acompanhe reuniões, publicações e notícias oficiais dos comitês.",
+        homeBannerImagemUrl: "",
+        homeBannerBotaoTexto: "Saiba mais",
+        homeBannerBotaoUrl: "#",
+        faleConoscoTitulo: "Fale Conosco",
+        faleConoscoTexto: "Entre em contato com a coordenação dos comitês.",
+        faleConoscoEmail: "",
+        faleConoscoTelefone: "",
+        faleConoscoEndereco: "",
+      };
+    }
+
+    function mergePortalConfig(cfg) {
+      return { ...getPortalDefaults(), ...(cfg || {}) };
+    }
+
+    function renderUltimasNoticias(items) {
+      if (!publicUltimasNoticias) return;
+      publicUltimasNoticias.innerHTML = "";
+      if (!items || !items.length) {
+        const empty = document.createElement("div");
+        empty.className = "notice";
+        empty.textContent = "Nenhuma notícia publicada no momento.";
+        publicUltimasNoticias.appendChild(empty);
+        return;
+      }
+      items.slice(0, 3).forEach((n) => {
+        const card = document.createElement("div");
+        card.className = "news-mini-card";
+
+        const t = document.createElement("h3");
+        t.textContent = n.titulo || "(sem título)";
+
+        const meta = document.createElement("div");
+        meta.className = "small";
+        meta.textContent = `${fmtDate(n.dataPublicacao)} • ${n.comite || "-"}`;
+
+        const r = document.createElement("p");
+        r.textContent = n.resumo || "";
+
+        card.appendChild(t);
+        card.appendChild(meta);
+        card.appendChild(r);
+        publicUltimasNoticias.appendChild(card);
+      });
+    }
+
+    function renderPortalPublico(config, ultimasNoticias) {
+      const cfg = mergePortalConfig(config);
+      portalConfigAtual = cfg;
+
+      if (heroTitulo) heroTitulo.textContent = cfg.homeBannerTitulo || "";
+      if (heroSubtitulo) heroSubtitulo.textContent = cfg.homeBannerSubtitulo || "";
+      if (heroBotao) {
+        heroBotao.textContent = cfg.homeBannerBotaoTexto || "Saiba mais";
+        heroBotao.href = cfg.homeBannerBotaoUrl || "#";
+      }
+      if (publicHero) {
+        if (cfg.homeBannerImagemUrl) {
+          publicHero.style.backgroundImage = `linear-gradient(120deg, rgba(3,41,70,0.72), rgba(8,92,123,0.58)), url('${cfg.homeBannerImagemUrl}')`;
+        } else {
+          publicHero.style.backgroundImage = "linear-gradient(120deg, #0a3f5d, #0f7f87)";
+        }
+      }
+
+      if (publicContatoTitulo) publicContatoTitulo.textContent = cfg.faleConoscoTitulo || "Fale Conosco";
+      if (publicContatoTexto) publicContatoTexto.textContent = cfg.faleConoscoTexto || "";
+      if (publicContatoEmail) publicContatoEmail.textContent = cfg.faleConoscoEmail || "-";
+      if (publicContatoTelefone) publicContatoTelefone.textContent = cfg.faleConoscoTelefone || "-";
+      if (publicContatoEndereco) publicContatoEndereco.textContent = cfg.faleConoscoEndereco || "-";
+
+      renderUltimasNoticias(ultimasNoticias || []);
+    }
+
+    function setPortalForm(config) {
+      const cfg = mergePortalConfig(config);
+      if (cfgBannerTitulo) cfgBannerTitulo.value = cfg.homeBannerTitulo || "";
+      if (cfgBannerSubtitulo) cfgBannerSubtitulo.value = cfg.homeBannerSubtitulo || "";
+      if (cfgBannerImagem) cfgBannerImagem.value = cfg.homeBannerImagemUrl || "";
+      if (cfgBannerBotaoTexto) cfgBannerBotaoTexto.value = cfg.homeBannerBotaoTexto || "";
+      if (cfgBannerBotaoUrl) cfgBannerBotaoUrl.value = cfg.homeBannerBotaoUrl || "";
+      if (cfgContatoTitulo) cfgContatoTitulo.value = cfg.faleConoscoTitulo || "";
+      if (cfgContatoTexto) cfgContatoTexto.value = cfg.faleConoscoTexto || "";
+      if (cfgContatoEmail) cfgContatoEmail.value = cfg.faleConoscoEmail || "";
+      if (cfgContatoTelefone) cfgContatoTelefone.value = cfg.faleConoscoTelefone || "";
+      if (cfgContatoEndereco) cfgContatoEndereco.value = cfg.faleConoscoEndereco || "";
+    }
+
+    function collectPortalForm() {
+      return {
+        homeBannerTitulo: (cfgBannerTitulo?.value || "").trim(),
+        homeBannerSubtitulo: (cfgBannerSubtitulo?.value || "").trim(),
+        homeBannerImagemUrl: (cfgBannerImagem?.value || "").trim(),
+        homeBannerBotaoTexto: (cfgBannerBotaoTexto?.value || "").trim(),
+        homeBannerBotaoUrl: (cfgBannerBotaoUrl?.value || "").trim(),
+        faleConoscoTitulo: (cfgContatoTitulo?.value || "").trim(),
+        faleConoscoTexto: (cfgContatoTexto?.value || "").trim(),
+        faleConoscoEmail: (cfgContatoEmail?.value || "").trim(),
+        faleConoscoTelefone: (cfgContatoTelefone?.value || "").trim(),
+        faleConoscoEndereco: (cfgContatoEndereco?.value || "").trim(),
+      };
+    }
+
+    async function carregarPortalPublico() {
+      try {
+        const r = await api({ acao: "obterPortalPublico" });
+        renderPortalPublico(r.config || {}, r.ultimasNoticias || []);
+      } catch (e) {
+        renderPortalPublico(getPortalDefaults(), []);
+      }
+    }
+
+    function fillComitesNoticia() {
+      if (!notComite) return;
+      notComite.innerHTML = "";
+      COMITES.forEach((c) => {
+        const o = document.createElement("option");
+        o.value = c;
+        o.textContent = c;
+        notComite.appendChild(o);
+      });
+    }
+
+    function resetFormNoticia() {
+      noticiaAtualId = null;
+      if (notTitulo) notTitulo.value = "";
+      if (notResumo) notResumo.value = "";
+      if (notImagem) notImagem.value = "";
+      if (notData) notData.value = new Date().toISOString().slice(0, 10);
+      if (notStatus) notStatus.value = "Rascunho";
+      if (notDestaqueHome) notDestaqueHome.value = "NÃO";
+      if (session?.perfil === "Presidente" && notComite) notComite.value = session.comite || "";
+      if (noticiaEditor) noticiaEditor.setData("<p>Digite a notícia...</p>");
+    }
+
+    async function garantirEditorNoticia() {
+      if (noticiaEditor || !editorNoticiaEl) return;
+      noticiaEditor = await ClassicEditor.create(editorNoticiaEl, {
+        toolbar: [
+          "heading", "|", "bold", "italic", "underline", "link", "|",
+          "bulletedList", "numberedList", "insertTable", "blockQuote", "|",
+          "undo", "redo"
+        ],
+        table: {
+          contentToolbar: ["tableColumn", "tableRow", "mergeTableCells"]
+        }
+      });
+    }
+
+    function renderNoticiasGestao(items) {
+      if (!listaNoticiasGestao) return;
+      listaNoticiasGestao.innerHTML = "";
+      if (!items || !items.length) {
+        const div = document.createElement("div");
+        div.className = "notice";
+        div.textContent = "Nenhuma notícia cadastrada.";
+        listaNoticiasGestao.appendChild(div);
+        return;
+      }
+
+      items.forEach((n) => {
+        const item = document.createElement("div");
+        item.className = "item";
+
+        const left = document.createElement("div");
+        const h = document.createElement("h3");
+        h.textContent = n.titulo || "(sem título)";
+        const p = document.createElement("p");
+        p.textContent = `${fmtDate(n.dataPublicacao)} • ${n.comite || "-"} • ${n.status || "Rascunho"} • Home: ${n.destaqueHome || "NÃO"}`;
+        left.appendChild(h);
+        left.appendChild(p);
+
+        const right = document.createElement("div");
+        right.className = "row";
+
+        const btnEditar = document.createElement("button");
+        btnEditar.textContent = "Editar";
+        btnEditar.addEventListener("click", async () => {
+          await garantirEditorNoticia();
+          formNoticia?.classList.remove("hidden");
+          noticiaAtualId = n.idNoticia || null;
+          if (notTitulo) notTitulo.value = n.titulo || "";
+          if (notResumo) notResumo.value = n.resumo || "";
+          if (notImagem) notImagem.value = n.imagemUrl || "";
+          if (notData) notData.value = (n.dataPublicacao || "").toString().slice(0, 10);
+          if (notStatus) notStatus.value = n.status || "Rascunho";
+          if (notDestaqueHome) notDestaqueHome.value = n.destaqueHome || "NÃO";
+          if (notComite) notComite.value = n.comite || "";
+          if (noticiaEditor) noticiaEditor.setData(n.conteudoHtml || "<p>Digite a notícia...</p>");
+        });
+
+        const btnExcluir = document.createElement("button");
+        btnExcluir.className = "danger";
+        btnExcluir.textContent = "Excluir";
+        btnExcluir.addEventListener("click", async () => {
+          if (!confirm("Excluir esta notícia?")) return;
+          btnExcluir.disabled = true;
+          try {
+            await api({ acao: "excluirNoticia", idToken, idNoticia: n.idNoticia });
+            await carregarNoticiasGestao();
+            await carregarPortalPublico();
+          } catch (e) {
+            setNotice("err", e.message);
+          } finally {
+            btnExcluir.disabled = false;
+          }
+        });
+
+        right.appendChild(btnEditar);
+        right.appendChild(btnExcluir);
+        item.appendChild(left);
+        item.appendChild(right);
+        listaNoticiasGestao.appendChild(item);
+      });
+    }
+
+    async function carregarNoticiasGestao() {
+      if (!session || (session.perfil !== "Admin" && session.perfil !== "Presidente")) return;
+      try {
+        const r = await api({ acao: "listarNoticiasGestao", idToken });
+        renderNoticiasGestao(r.noticias || []);
+      } catch (e) {
+        setNotice("err", e.message);
+      }
+    }
+
+    async function salvarConfigPortal() {
+      if (!session || (session.perfil !== "Admin" && session.perfil !== "Presidente")) {
+        setNotice("err", "Sem permissão.");
+        return;
+      }
+      btnSalvarPortalConfig.disabled = true;
+      try {
+        await api({ acao: "salvarPortalConfig", idToken, config: collectPortalForm() });
+        setNotice("ok", "Configurações do portal salvas.");
+        await carregarPortalPublico();
+      } catch (e) {
+        setNotice("err", e.message);
+      } finally {
+        btnSalvarPortalConfig.disabled = false;
+      }
+    }
+
+    async function salvarNoticiaPortal() {
+      if (!session || (session.perfil !== "Admin" && session.perfil !== "Presidente")) {
+        setNotice("err", "Sem permissão.");
+        return;
+      }
+      await garantirEditorNoticia();
+      btnSalvarNoticia.disabled = true;
+      try {
+        await api({
+          acao: "salvarNoticia",
+          idToken,
+          idNoticia: noticiaAtualId || "",
+          titulo: (notTitulo?.value || "").trim(),
+          resumo: (notResumo?.value || "").trim(),
+          conteudoHtml: noticiaEditor ? noticiaEditor.getData() : "",
+          imagemUrl: (notImagem?.value || "").trim(),
+          comite: (notComite?.value || "").trim(),
+          dataPublicacao: (notData?.value || "").trim(),
+          status: (notStatus?.value || "Rascunho").trim(),
+          destaqueHome: (notDestaqueHome?.value || "NÃO").trim(),
+        });
+        setNotice("ok", "Notícia salva com sucesso.");
+        formNoticia?.classList.add("hidden");
+        resetFormNoticia();
+        await carregarNoticiasGestao();
+        await carregarPortalPublico();
+      } catch (e) {
+        setNotice("err", e.message);
+      } finally {
+        btnSalvarNoticia.disabled = false;
+      }
+    }
+
+    async function carregarPortalGestao() {
+      if (!session || (session.perfil !== "Admin" && session.perfil !== "Presidente")) {
+        panelPortalGestao?.classList.add("hidden");
+        return;
+      }
+      panelPortalGestao?.classList.remove("hidden");
+      await garantirEditorNoticia();
+      fillComitesNoticia();
+      if (session.perfil === "Presidente") {
+        notComite.value = session.comite || "";
+        notComite.disabled = true;
+      } else {
+        notComite.disabled = false;
+      }
+      const r = await api({ acao: "obterPortalPublico" });
+      setPortalForm(r.config || {});
+      await carregarNoticiasGestao();
+    }
 
     function fillComites() {
       if (!cadComite) return;
@@ -702,6 +1040,7 @@
         panelPresidente.classList.add("hidden");
         panelCadastro?.classList.add("hidden");
         panelAprovacoes?.classList.add("hidden");
+        panelPortalGestao?.classList.add("hidden");
         panelAguardando.classList.remove("hidden");
         setNotice("err", r.mensagem || "Acesso não autorizado.");
         session = null;
@@ -728,6 +1067,7 @@
         panelPresidente.classList.add("hidden");
         panelCadastro?.classList.remove("hidden");
         panelAprovacoes?.classList.add("hidden");
+        panelPortalGestao?.classList.add("hidden");
         setNotice("err", "Complete seu cadastro para solicitar aprovação.");
         return;
       }
@@ -755,8 +1095,10 @@
       if (session.perfil === "Admin" || session.perfil === "Presidente") {
         panelAprovacoes?.classList.remove("hidden");
         await carregarPendentes();
+        await carregarPortalGestao();
       } else {
         panelAprovacoes?.classList.add("hidden");
+        panelPortalGestao?.classList.add("hidden");
       }
     }
 
@@ -1146,9 +1488,21 @@
     btnInserirLista?.addEventListener("click", inserirListaPresenca);
     btnGerarPdfAta?.addEventListener("click", gerarPdfAta);
     btnUploadAta?.addEventListener("click", uploadAtaAssinada);
+    btnSalvarPortalConfig?.addEventListener("click", salvarConfigPortal);
+    btnNovaNoticia?.addEventListener("click", async () => {
+      await garantirEditorNoticia();
+      resetFormNoticia();
+      formNoticia?.classList.toggle("hidden");
+    });
+    btnSalvarNoticia?.addEventListener("click", salvarNoticiaPortal);
+    btnCancelarNoticia?.addEventListener("click", () => {
+      formNoticia?.classList.add("hidden");
+      resetFormNoticia();
+    });
 
     renderComiteTabs();
     carregarReunioesAbertasPublicas();
+    carregarPortalPublico();
 
     auth.onAuthStateChanged(async (user) => {
       if (!user) {
@@ -1158,12 +1512,15 @@
         panelPresidente.classList.add("hidden");
         panelCadastro?.classList.add("hidden");
         panelAprovacoes?.classList.add("hidden");
+        panelPortalGestao?.classList.add("hidden");
         panelReuniao.classList.add("hidden");
         reunioes = [];
         reuniaoAtual = null;
         session = null;
         idToken = null;
+        noticiaAtualId = null;
         setNotice(null, "");
+        carregarPortalPublico();
         return;
       }
 
