@@ -149,10 +149,16 @@
     list.slice(0, 3).forEach(function (n) {
       var card = document.createElement("article");
       card.className = "news-mini-card";
+      var thumb = n.imagemUrl
+        ? ("<div class='news-mini-thumb-wrap'><img class='news-mini-thumb' src='" + n.imagemUrl + "' alt='Capa da notícia' /></div>")
+        : "";
       card.innerHTML =
-        "<h3>" + (n.titulo || "(sem título)") + "</h3>" +
-        "<div class='small'>" + fmtDate(n.dataPublicacao) + " • " + (n.comite || "-") + "</div>" +
-        "<p>" + (n.resumo || "") + "</p>";
+        thumb +
+        "<div class='news-mini-content'>" +
+          "<h3>" + (n.titulo || "(sem título)") + "</h3>" +
+          "<div class='small'>" + fmtDate(n.dataPublicacao) + " • " + (n.comite || "-") + "</div>" +
+          "<p>" + (n.resumo || "") + "</p>" +
+        "</div>";
       box.appendChild(card);
     });
   }
@@ -193,7 +199,9 @@
     list.forEach(function (n) {
       var item = document.createElement("article");
       item.className = "card noticia-item";
-      var img = n.imagemUrl ? ("<img class='noticia-capa' src='" + n.imagemUrl + "' alt='Capa da notícia' />") : "";
+      var img = n.imagemUrl
+        ? ("<div class='noticia-capa-wrap'><img class='noticia-capa' src='" + n.imagemUrl + "' alt='Capa da notícia' /></div>")
+        : "";
       item.innerHTML =
         img +
         "<div class='small'>" + fmtDate(n.dataPublicacao) + " • " + (n.comite || "-") + "</div>" +

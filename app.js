@@ -529,6 +529,19 @@
       items.slice(0, 3).forEach((n) => {
         const card = document.createElement("div");
         card.className = "news-mini-card";
+        if (n.imagemUrl) {
+          const thumbWrap = document.createElement("div");
+          thumbWrap.className = "news-mini-thumb-wrap";
+          const thumb = document.createElement("img");
+          thumb.className = "news-mini-thumb";
+          thumb.src = n.imagemUrl;
+          thumb.alt = "Capa da notícia";
+          thumbWrap.appendChild(thumb);
+          card.appendChild(thumbWrap);
+        }
+
+        const content = document.createElement("div");
+        content.className = "news-mini-content";
 
         const t = document.createElement("h3");
         t.textContent = n.titulo || "(sem título)";
@@ -540,9 +553,10 @@
         const r = document.createElement("p");
         r.textContent = n.resumo || "";
 
-        card.appendChild(t);
-        card.appendChild(meta);
-        card.appendChild(r);
+        content.appendChild(t);
+        content.appendChild(meta);
+        content.appendChild(r);
+        card.appendChild(content);
         publicUltimasNoticias.appendChild(card);
       });
     }

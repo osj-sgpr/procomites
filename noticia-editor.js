@@ -158,7 +158,7 @@
         height: 520,
         extraPlugins: "justify,colorbutton,font,stylescombo",
         removeButtons: "Subscript,Superscript",
-        contentsCss: ["./styles.css?v=20260222h"],
+        contentsCss: ["./styles.css?v=20260222i"],
         toolbar: [
           { name: "clipboard", items: ["Undo", "Redo"] },
           { name: "styles", items: ["Styles", "Format", "Font", "FontSize"] },
