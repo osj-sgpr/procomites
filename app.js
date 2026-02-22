@@ -285,8 +285,9 @@
     const btnCancelarAta = qs("btnCancelarAta");
     const btnInserirLista = qs("btnInserirLista");
     const btnGerarPdfAta = qs("btnGerarPdfAta");
-    const ataUrlAssinada = qs("ataUrlAssinada");
-    const btnPublicarAta = qs("btnPublicarAta");
+    const ataPdfAssinada = qs("ataPdfAssinada");
+    const ataUploadStatus = qs("ataUploadStatus");
+    const btnUploadAta = qs("btnUploadAta");
 
     let session = null; // { idUsuario, perfil, nome, comite, email }
     let reunioes = [];
@@ -681,7 +682,10 @@
       try {
         const r = await api({ acao: "obterAtaRascunho", idToken, idReuniao: reuniaoAtual.idReuniao });
         editor.setData(r.html || "<p>Digite a ata aqui...</p>");
-        if (ataUrlAssinada) ataUrlAssinada.value = (r.ataPdfAssinadaLink || "").toString();
+        if (ataUploadStatus) {
+          const link = (r.ataPdfAssinadaLink || "").toString().trim();
+          ataUploadStatus.textContent = link ? ("Publicado: " + link) : "";
+        }
       } catch (e) {
         editor.setData("<p>Digite a ata aqui...</p>");
       }
@@ -741,21 +745,105 @@
       }
     }
 
-    async function publicarAta() {
+    function setUploadStatus(text) {
+      if (!ataUploadStatus) return;
+      ataUploadStatus.textContent = text || "";
+    }
+
+    function readFileAsBase64(file, onProgress) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("Falha ao ler o arquivo."));
+        reader.onprogress = (e) => {
+          if (onProgress && e.lengthComputable) onProgress(e.loaded, e.total);
+        };
+        reader.onload = () => {
+          const res = String(reader.result || "");
+          // data:application/pdf;base64,xxxx
+          const idx = res.indexOf("base64,");
+          resolve(idx >= 0 ? res.slice(idx + 7) : res);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function uploadAtaAssinada() {
       if (!reuniaoAtual) return;
-      const urlAssinada = (ataUrlAssinada?.value || "").trim();
-      if (!urlAssinada) return setNotice("err", "Cole o link do PDF assinado.");
-      btnPublicarAta.disabled = true;
+      if (!session || session.perfil !== "Presidente") {
+        setNotice("err", "Somente o Presidente pode publicar a ATA.");
+        return;
+      }
+      const file = ataPdfAssinada?.files?.[0];
+      if (!file) {
+        setNotice("err", "Selecione o PDF assinado.");
+        return;
+      }
+      if (!/pdf$/i.test(file.type) && !/\.pdf$/i.test(file.name || "")) {
+        setNotice("err", "Arquivo inválido. Envie um PDF.");
+        return;
+      }
+
+      btnUploadAta.disabled = true;
+      setNotice(null, "");
+      setUploadStatus("Lendo arquivo...");
+
       try {
-        const r = await api({ acao: "publicarAtaAssinada", idToken, idReuniao: reuniaoAtual.idReuniao, urlAssinada });
-        if (r.sucesso) {
-          setNotice("ok", "ATA publicada.");
+        const b64 = await readFileAsBase64(file, (loaded, total) => {
+          const pct = total ? Math.round((loaded / total) * 100) : 0;
+          setUploadStatus("Lendo arquivo... " + pct + "%");
+        });
+
+        // chunking
+        const chunkSize = 80 * 1024; // 80k chars
+        const totalChunks = Math.max(1, Math.ceil(b64.length / chunkSize));
+
+        setUploadStatus("Iniciando upload...");
+        const init = await api({
+          acao: "iniciarUploadAtaAssinada",
+          idToken,
+          idReuniao: reuniaoAtual.idReuniao,
+          fileName: file.name || "ATA_ASSINADA.pdf",
+          totalChunks,
+        });
+        const uploadId = init.uploadId;
+        if (!uploadId) throw new Error("Falha ao iniciar upload.");
+
+        for (let i = 0; i < totalChunks; i++) {
+          const start = i * chunkSize;
+          const end = Math.min(b64.length, start + chunkSize);
+          const part = b64.slice(start, end);
+          await api({
+            acao: "enviarChunkAtaAssinada",
+            idToken,
+            idReuniao: reuniaoAtual.idReuniao,
+            uploadId,
+            chunkIndex: i,
+            data: part,
+          });
+          const pct = Math.round(((i + 1) / totalChunks) * 100);
+          setUploadStatus("Enviando... " + pct + "%");
+        }
+
+        setUploadStatus("Finalizando...");
+        const fin = await api({
+          acao: "finalizarUploadAtaAssinada",
+          idToken,
+          idReuniao: reuniaoAtual.idReuniao,
+          uploadId,
+        });
+
+        if (fin.sucesso && fin.url) {
+          setUploadStatus("Publicado: " + fin.url);
+          setNotice("ok", "ATA assinada enviada e publicada. Link: " + fin.url);
           await carregarReunioes();
+        } else {
+          throw new Error(fin.mensagem || "Não foi possível finalizar upload.");
         }
       } catch (e) {
         setNotice("err", e.message);
+        setUploadStatus("Erro: " + e.message);
       } finally {
-        btnPublicarAta.disabled = false;
+        btnUploadAta.disabled = false;
       }
     }
 
@@ -791,7 +879,7 @@
     btnSalvarAta?.addEventListener("click", salvarAta);
     btnInserirLista?.addEventListener("click", inserirListaPresenca);
     btnGerarPdfAta?.addEventListener("click", gerarPdfAta);
-    btnPublicarAta?.addEventListener("click", publicarAta);
+    btnUploadAta?.addEventListener("click", uploadAtaAssinada);
 
     auth.onAuthStateChanged(async (user) => {
       if (!user) {
