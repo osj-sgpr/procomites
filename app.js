@@ -75,7 +75,9 @@
 
   function fmtDate(iso) {
     if (!iso) return "";
-    return iso;
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return String(iso);
+    return d.toLocaleDateString("pt-BR", { timeZone: "UTC" });
   }
 
   // -------------------- Página pública (validar-presenca.html) --------------------
@@ -307,6 +309,8 @@
     const ataPdfAssinada = qs("ataPdfAssinada");
     const ataUploadStatus = qs("ataUploadStatus");
     const btnUploadAta = qs("btnUploadAta");
+    const publicComiteTabs = qs("publicComiteTabs");
+    const publicReunioesAbertas = qs("publicReunioesAbertas");
 
     let session = null; // { idUsuario, perfil, nome, comite, email }
     let reunioes = [];
@@ -322,6 +326,7 @@
       "CBH S. Teresa e S. Antônio",
       "CBH Coco e Caiapó",
     ];
+    let comitePublicoAtivo = COMITES[0] || "";
 
     function fillComites() {
       if (!cadComite) return;
@@ -351,6 +356,99 @@
         o.textContent = c;
         nrComite.appendChild(o);
       });
+    }
+
+    function renderComiteTabs() {
+      if (!publicComiteTabs) return;
+      publicComiteTabs.innerHTML = "";
+      COMITES.forEach((comite) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "committee-tab" + (comite === comitePublicoAtivo ? " active" : "");
+        btn.textContent = comite;
+        btn.addEventListener("click", async () => {
+          if (comitePublicoAtivo === comite) return;
+          comitePublicoAtivo = comite;
+          renderComiteTabs();
+          await carregarReunioesAbertasPublicas();
+        });
+        publicComiteTabs.appendChild(btn);
+      });
+    }
+
+    function renderReunioesAbertasPublicas(items) {
+      if (!publicReunioesAbertas) return;
+      publicReunioesAbertas.innerHTML = "";
+
+      if (!items.length) {
+        const empty = document.createElement("div");
+        empty.className = "notice";
+        empty.textContent = "Nenhuma reunião aberta ou agendada para este comitê.";
+        publicReunioesAbertas.appendChild(empty);
+        return;
+      }
+
+      items
+        .slice()
+        .sort((a, b) => (a.data || "").localeCompare(b.data || ""))
+        .forEach((r) => {
+          const item = document.createElement("div");
+          item.className = "meeting-open-item";
+
+          const title = document.createElement("h3");
+          title.textContent = r.titulo || "(sem título)";
+
+          const meta = document.createElement("div");
+          meta.className = "meeting-open-meta";
+          meta.textContent = `${fmtDate(r.data)} • ${r.comite || "-"} • ${r.status || "-"}`;
+
+          const tipo = (r.tipo || "Presencial").toString().trim();
+          const localLabel = tipo.toLowerCase() === "online" ? "Link da reunião" : "Endereço da reunião";
+          const location = document.createElement("p");
+          location.textContent = `${tipo} • ${localLabel}: ${r.local || "não informado"}`;
+
+          const actions = document.createElement("div");
+          actions.className = "row";
+
+          const btnValidar = document.createElement("button");
+          btnValidar.className = "primary";
+          btnValidar.textContent = "Validar presença";
+          btnValidar.addEventListener("click", () => {
+            window.location.href = `./validar-presenca.html?id=${encodeURIComponent(r.idReuniao || "")}`;
+          });
+          actions.appendChild(btnValidar);
+
+          if (session) {
+            const btnPainel = document.createElement("button");
+            btnPainel.textContent = "Abrir no painel";
+            btnPainel.addEventListener("click", () => {
+              const found = (reunioes || []).find((x) => x.idReuniao === r.idReuniao);
+              if (!found) {
+                setNotice("err", "Você não tem permissão para gerenciar esta reunião no painel.");
+                return;
+              }
+              selecionarReuniao(found);
+            });
+            actions.appendChild(btnPainel);
+          }
+
+          item.appendChild(title);
+          item.appendChild(meta);
+          item.appendChild(location);
+          item.appendChild(actions);
+          publicReunioesAbertas.appendChild(item);
+        });
+    }
+
+    async function carregarReunioesAbertasPublicas() {
+      if (!comitePublicoAtivo) return;
+      try {
+        const r = await api({ acao: "listarReunioesPublicas", comite: comitePublicoAtivo });
+        renderReunioesAbertasPublicas(r.reunioes || []);
+      } catch (e) {
+        renderReunioesAbertasPublicas([]);
+        setNotice("err", e.message);
+      }
     }
 
     function setAuthUI(logado) {
@@ -447,7 +545,7 @@
 
     async function selecionarReuniao(r) {
       reuniaoAtual = r;
-      qs("reuniaoSelecionada").textContent = `${r.titulo || ""} (${fmtDate(r.data)})`;
+      qs("reuniaoSelecionada").textContent = `${r.titulo || ""} • ${fmtDate(r.data)} • ${(r.comite || "-")} • ${(r.tipo || "-")} • ${(r.local || "-")}`;
       panelReuniao.classList.remove("hidden");
       linkPublico.textContent = r.linkConfirmacao || "";
       if (reuniaoStatus) reuniaoStatus.textContent = `Status: ${r.status || "-"}`;
@@ -746,6 +844,7 @@
       const r = await api({ acao: "listarReunioes", idToken, idUsuario: session.idUsuario });
       reunioes = r.reunioes || [];
       renderReunioes();
+      await carregarReunioesAbertasPublicas();
     }
 
     async function criarReuniao() {
@@ -1022,6 +1121,9 @@
     btnInserirLista?.addEventListener("click", inserirListaPresenca);
     btnGerarPdfAta?.addEventListener("click", gerarPdfAta);
     btnUploadAta?.addEventListener("click", uploadAtaAssinada);
+
+    renderComiteTabs();
+    carregarReunioesAbertasPublicas();
 
     auth.onAuthStateChanged(async (user) => {
       if (!user) {
