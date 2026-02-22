@@ -81,6 +81,45 @@
 
           <div id="listaReunioes" class="list" style="margin-top: 12px;"></div>
         </div>
+
+        <div id="panelCadastro" class="hidden">
+          <div style="font-weight: 700; margin-bottom: 6px;">Primeiro acesso</div>
+          <div class="small">Complete seu cadastro para solicitar aprovação do Presidente do Comitê.</div>
+
+          <div class="card" style="margin-top: 12px;">
+            <div class="row">
+              <div class="field">
+                <label>Comitê</label>
+                <select id="cadComite"></select>
+              </div>
+              <div class="field">
+                <label>Telefone</label>
+                <input id="cadTelefone" placeholder="(63) 9xxxx-xxxx" />
+              </div>
+            </div>
+            <div class="row" style="margin-top: 10px;">
+              <div class="field">
+                <label>Órgão</label>
+                <input id="cadOrgao" placeholder="Ex: SEMARH" />
+              </div>
+            </div>
+            <div class="row" style="margin-top: 10px; justify-content: flex-end;">
+              <button id="btnSalvarCadastro" class="primary">Salvar cadastro</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="panelAprovacoes" class="hidden" style="margin-top: 12px;">
+          <hr />
+          <div class="row" style="justify-content: space-between;">
+            <div>
+              <div style="font-weight: 700;">Aprovações pendentes</div>
+              <div id="aprovInfo" class="small"></div>
+            </div>
+            <button id="btnCarregarPendentes">Atualizar pendentes</button>
+          </div>
+          <div id="listaPendentes" class="list" style="margin-top: 12px;"></div>
+        </div>
       </div>
 
       <div class="card">
