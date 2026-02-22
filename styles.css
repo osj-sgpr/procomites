@@ -1,7 +1,7 @@
 :root {
   --bg: #0b1220;
   --card: #111a2e;
-  --muted: #8ea0c0;
+  --muted: #b7c4df;
   --text: #e8eefc;
   --accent: #4f8cff;
   --danger: #ff5a76;
@@ -175,7 +175,7 @@ hr {
   border-radius: 12px;
   border: 1px solid var(--border);
   background: rgba(255,255,255,0.04);
-  color: var(--muted);
+  color: rgba(232,238,252,0.92);
   font-size: 13px;
 }
 
