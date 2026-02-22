@@ -3,9 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>ProComitês - Painel</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./styles.css?v=20260222" />
 </head>
 <body>
   <div class="container">
@@ -141,11 +144,22 @@
             </div>
           </div>
 
+          <div class="row" style="margin-top: 10px; justify-content: space-between; align-items: center;">
+            <div class="small" id="reuniaoStatus"></div>
+            <div class="row">
+              <button id="btnAbrirReuniao">Abrir reunião</button>
+              <button id="btnFecharReuniao" class="danger">Fechar reunião</button>
+            </div>
+          </div>
+
           <hr />
 
           <div class="row" style="justify-content: space-between; align-items: center;">
             <div style="font-weight: 600;">Listas</div>
-            <button id="btnAtualizarListas">Atualizar lista</button>
+            <div class="row">
+              <button id="btnPendentes">Atualizar pendentes</button>
+              <button id="btnConfirmar">Confirmar participação</button>
+            </div>
           </div>
 
           <div style="margin-top: 10px;">
@@ -214,6 +228,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
   <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
-  <script src="./app.js?v=20260220"></script>
+  <script src="./app.js?v=20260222"></script>
 </body>
 </html>
