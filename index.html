@@ -8,7 +8,7 @@
   <meta http-equiv="Expires" content="0" />
   <title>ProComitês Tocantins - Gestão dos Comitês de Bacia</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="./styles.css?v=20260222b" />
+  <link rel="stylesheet" href="./styles.css?v=20260222c" />
 </head>
 <body>
   <div class="container">
@@ -130,10 +130,18 @@
       </div>
 
       <div class="card">
-        <div style="font-weight: 700; margin-bottom: 6px;">Reunião selecionada</div>
-        <div id="reuniaoSelecionada" class="small">Selecione uma reunião para ver confirmações e presenças.</div>
+        <div style="font-weight: 700; margin-bottom: 6px;">Reuniões Abertas</div>
+        <div class="small">Acompanhe por comitê as reuniões públicas em andamento.</div>
+
+        <div id="publicComiteTabs" class="committee-tabs" style="margin-top: 10px;"></div>
+        <div id="publicReunioesAbertas" class="list" style="margin-top: 10px;"></div>
 
         <div id="panelReuniao" class="hidden" style="margin-top: 10px;">
+          <hr />
+          <div style="font-weight: 700; margin-bottom: 6px;">Reunião em gestão</div>
+          <div id="reuniaoSelecionada" class="small">Selecione uma reunião para ver confirmações e presenças.</div>
+
+          <div style="height: 8px;"></div>
           <div class="row" style="justify-content: space-between; align-items: center;">
             <div>
               <div class="small">Link público</div>
@@ -240,6 +248,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
   <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
-  <script src="./app.js?v=20260222b"></script>
+  <script src="./app.js?v=20260222c"></script>
 </body>
 </html>
