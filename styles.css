@@ -208,9 +208,29 @@ hr {
   padding: 24px;
   display: flex;
   align-items: flex-end;
+  position: relative;
   background: linear-gradient(120deg, #0a3f5d, #0f7f87);
   background-size: cover;
   background-position: center;
+}
+
+.hero-edit-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(214, 246, 255, 0.7);
+  background: rgba(12, 58, 83, 0.65);
+  color: #eaf9ff;
+  font-size: 15px;
+  line-height: 1;
+  padding: 0;
+}
+
+.hero-edit-btn:hover {
+  filter: brightness(1.08);
 }
 
 .public-hero-overlay {

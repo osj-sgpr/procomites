@@ -426,6 +426,7 @@
     const publicComiteTabs = qs("publicComiteTabs");
     const publicReunioesAbertas = qs("publicReunioesAbertas");
     const publicHero = qs("publicHero");
+    const heroBadge = qs("heroBadge");
     const heroTitulo = qs("heroTitulo");
     const heroSubtitulo = qs("heroSubtitulo");
     const heroBotao = qs("heroBotao");
@@ -446,6 +447,10 @@
     const cfgBannerImagem = qs("cfgBannerImagem");
     const cfgBannerBotaoTexto = qs("cfgBannerBotaoTexto");
     const cfgBannerBotaoUrl = qs("cfgBannerBotaoUrl");
+    const cfgBannerChapeu = qs("cfgBannerChapeu");
+    const cfgBannerTituloSize = qs("cfgBannerTituloSize");
+    const cfgBannerSubtituloSize = qs("cfgBannerSubtituloSize");
+    const cfgBannerBotaoSize = qs("cfgBannerBotaoSize");
     const cfgContatoTitulo = qs("cfgContatoTitulo");
     const cfgContatoTexto = qs("cfgContatoTexto");
     const cfgContatoEmail = qs("cfgContatoEmail");
@@ -475,6 +480,7 @@
     let noticiaAtualId = null;
     let portalConfigAtual = null;
     let idToken = null;
+    const requestedPortalTab = (getUrlParam("portalTab") || "").toLowerCase();
 
     const COMITES = [
       "CBH Lago de Palmas",
@@ -493,12 +499,23 @@
         homeBannerImagemUrl: "",
         homeBannerBotaoTexto: "Saiba mais",
         homeBannerBotaoUrl: "#",
+        homeBannerChapeu: "Portal Oficial",
+        homeBannerTituloSizePx: "",
+        homeBannerSubtituloSizePx: "",
+        homeBannerBotaoSizePx: "",
         faleConoscoTitulo: "Fale Conosco",
         faleConoscoTexto: "Entre em contato com a coordenação dos comitês.",
         faleConoscoEmail: "",
         faleConoscoTelefone: "",
         faleConoscoEndereco: "",
       };
+    }
+
+    function asCssPx(value, min, max) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "";
+      const clamped = Math.min(max, Math.max(min, n));
+      return clamped + "px";
     }
 
     function isLikelyDirectImageUrl(url) {
@@ -586,6 +603,12 @@
 
       if (heroTitulo) heroTitulo.textContent = cfg.homeBannerTitulo || "";
       if (heroSubtitulo) heroSubtitulo.textContent = cfg.homeBannerSubtitulo || "";
+      if (heroBadge) heroBadge.textContent = cfg.homeBannerChapeu || "Portal Oficial";
+
+      if (heroTitulo) heroTitulo.style.fontSize = asCssPx(cfg.homeBannerTituloSizePx, 20, 60);
+      if (heroSubtitulo) heroSubtitulo.style.fontSize = asCssPx(cfg.homeBannerSubtituloSizePx, 14, 36);
+      if (heroBotao) heroBotao.style.fontSize = asCssPx(cfg.homeBannerBotaoSizePx, 12, 26);
+
       if (heroBotao) {
         heroBotao.textContent = cfg.homeBannerBotaoTexto || "Saiba mais";
         heroBotao.href = cfg.homeBannerBotaoUrl || "#";
@@ -614,6 +637,10 @@
       if (cfgBannerImagem) cfgBannerImagem.value = cfg.homeBannerImagemUrl || "";
       if (cfgBannerBotaoTexto) cfgBannerBotaoTexto.value = cfg.homeBannerBotaoTexto || "";
       if (cfgBannerBotaoUrl) cfgBannerBotaoUrl.value = cfg.homeBannerBotaoUrl || "";
+      if (cfgBannerChapeu) cfgBannerChapeu.value = cfg.homeBannerChapeu || "";
+      if (cfgBannerTituloSize) cfgBannerTituloSize.value = cfg.homeBannerTituloSizePx || "";
+      if (cfgBannerSubtituloSize) cfgBannerSubtituloSize.value = cfg.homeBannerSubtituloSizePx || "";
+      if (cfgBannerBotaoSize) cfgBannerBotaoSize.value = cfg.homeBannerBotaoSizePx || "";
       if (cfgContatoTitulo) cfgContatoTitulo.value = cfg.faleConoscoTitulo || "";
       if (cfgContatoTexto) cfgContatoTexto.value = cfg.faleConoscoTexto || "";
       if (cfgContatoEmail) cfgContatoEmail.value = cfg.faleConoscoEmail || "";
@@ -628,6 +655,10 @@
         homeBannerImagemUrl: (cfgBannerImagem?.value || "").trim(),
         homeBannerBotaoTexto: (cfgBannerBotaoTexto?.value || "").trim(),
         homeBannerBotaoUrl: (cfgBannerBotaoUrl?.value || "").trim(),
+        homeBannerChapeu: (cfgBannerChapeu?.value || "").trim(),
+        homeBannerTituloSizePx: (cfgBannerTituloSize?.value || "").trim(),
+        homeBannerSubtituloSizePx: (cfgBannerSubtituloSize?.value || "").trim(),
+        homeBannerBotaoSizePx: (cfgBannerBotaoSize?.value || "").trim(),
         faleConoscoTitulo: (cfgContatoTitulo?.value || "").trim(),
         faleConoscoTexto: (cfgContatoTexto?.value || "").trim(),
         faleConoscoEmail: (cfgContatoEmail?.value || "").trim(),
@@ -838,7 +869,7 @@
       if (session.perfil === "Admin") {
         if (btnPortalTabConfig) btnPortalTabConfig.classList.remove("hidden");
         if (portalConfigTabContent) portalConfigTabContent.classList.remove("hidden");
-        setPortalTab("config");
+        setPortalTab(requestedPortalTab === "noticias" ? "noticias" : "config");
         try {
           const r = await api({ acao: "obterPortalPublico" });
           setPortalForm(r.config || {});
@@ -1222,6 +1253,10 @@
         panelAguardando.classList.remove("hidden");
         setNotice("err", r.mensagem || "Acesso não autorizado.");
         session = null;
+        try {
+          localStorage.removeItem("procomites.sid");
+          localStorage.removeItem("procomites.perfil");
+        } catch (e) {}
         return;
       }
 
@@ -1237,6 +1272,8 @@
       try {
         if (window.__SID__) localStorage.setItem("procomites.sid", window.__SID__);
         else localStorage.removeItem("procomites.sid");
+        if (session?.perfil) localStorage.setItem("procomites.perfil", session.perfil);
+        else localStorage.removeItem("procomites.perfil");
       } catch (e) {}
 
       userLine.textContent = `${session.nome || ""} • ${session.email || ""} • ${session.perfil || ""}`;
@@ -1701,7 +1738,10 @@
         session = null;
         idToken = null;
         noticiaAtualId = null;
-        try { localStorage.removeItem("procomites.sid"); } catch (e) {}
+        try {
+          localStorage.removeItem("procomites.sid");
+          localStorage.removeItem("procomites.perfil");
+        } catch (e) {}
         setNotice(null, "");
         carregarPortalPublico();
         return;

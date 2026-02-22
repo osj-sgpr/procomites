@@ -69,6 +69,10 @@
       homeBannerImagemUrl: "",
       homeBannerBotaoTexto: "Saiba mais",
       homeBannerBotaoUrl: "#",
+      homeBannerChapeu: "Portal Oficial",
+      homeBannerTituloSizePx: "",
+      homeBannerSubtituloSizePx: "",
+      homeBannerBotaoSizePx: "",
       faleConoscoTitulo: "Fale Conosco",
       faleConoscoTexto: "",
       faleConoscoEmail: "",
@@ -82,6 +86,13 @@
     var msg = (err && err.message ? err.message : "").toLowerCase();
     var action = (actionName || "").toLowerCase();
     return msg.indexOf("ação inválida: " + action) >= 0 || msg.indexOf("acao invalida: " + action) >= 0;
+  }
+
+  function asCssPx(value, min, max) {
+    var n = Number(value);
+    if (!Number.isFinite(n)) return "";
+    var clamped = Math.min(max, Math.max(min, n));
+    return clamped + "px";
   }
 
   async function loadPortalPublicoData() {
@@ -115,14 +126,33 @@
     }
   }
 
+  function initAdminEditShortcut() {
+    var btn = qs("heroEditBtn");
+    if (!btn) return;
+    var perfil = "";
+    try {
+      perfil = localStorage.getItem("procomites.perfil") || "";
+    } catch (e) {}
+    if (perfil !== "Admin") return;
+    btn.classList.remove("hidden");
+    btn.addEventListener("click", function () {
+      window.location.href = "./painel.html?portalTab=config";
+    });
+  }
+
   function renderHero(cfg) {
     var hero = qs("publicHero");
+    var badge = qs("heroBadge");
     var titulo = qs("heroTitulo");
     var sub = qs("heroSubtitulo");
     var botao = qs("heroBotao");
+    if (badge) badge.textContent = cfg.homeBannerChapeu || "Portal Oficial";
     if (titulo) titulo.textContent = cfg.homeBannerTitulo || "";
     if (sub) sub.textContent = cfg.homeBannerSubtitulo || "";
+    if (titulo) titulo.style.fontSize = asCssPx(cfg.homeBannerTituloSizePx, 20, 60);
+    if (sub) sub.style.fontSize = asCssPx(cfg.homeBannerSubtituloSizePx, 14, 36);
     if (botao) {
+      botao.style.fontSize = asCssPx(cfg.homeBannerBotaoSizePx, 12, 26);
       botao.textContent = cfg.homeBannerBotaoTexto || "Saiba mais";
       botao.href = cfg.homeBannerBotaoUrl || "#";
     }
@@ -180,6 +210,7 @@
     var r = await loadPortalPublicoData();
     var cfg = mergeConfig(r.config || {});
     renderHero(cfg);
+    initAdminEditShortcut();
     renderLatest(r.ultimasNoticias || []);
     renderContact(cfg);
   }

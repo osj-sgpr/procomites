@@ -8,7 +8,7 @@
   <meta http-equiv="Expires" content="0" />
   <title>ProComitês Tocantins - Painel de Gestão</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="./styles.css?v=20260222i" />
+  <link rel="stylesheet" href="./styles.css?v=20260222k" />
 </head>
 <body>
   <div class="container">
@@ -177,6 +177,28 @@
               </div>
             </div>
 
+            <div style="font-weight: 600; margin: 14px 0 8px;">Ajustes de texto da Home</div>
+            <div class="row">
+              <div class="field">
+                <label>Texto superior (ex.: Portal Oficial)</label>
+                <input id="cfgBannerChapeu" placeholder="Portal Oficial" />
+              </div>
+              <div class="field">
+                <label>Tamanho do título (px)</label>
+                <input id="cfgBannerTituloSize" type="number" min="20" max="60" placeholder="Auto" />
+              </div>
+            </div>
+            <div class="row" style="margin-top: 10px;">
+              <div class="field">
+                <label>Tamanho do subtítulo (px)</label>
+                <input id="cfgBannerSubtituloSize" type="number" min="14" max="36" placeholder="Auto" />
+              </div>
+              <div class="field">
+                <label>Tamanho do botão (px)</label>
+                <input id="cfgBannerBotaoSize" type="number" min="12" max="26" placeholder="Auto" />
+              </div>
+            </div>
+
             <div style="font-weight: 600; margin: 14px 0 8px;">Fale Conosco</div>
             <div class="row">
               <div class="field">
@@ -338,6 +360,6 @@
 
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="./app.js?v=20260222j"></script>
+  <script src="./app.js?v=20260222k"></script>
 </body>
 </html>
