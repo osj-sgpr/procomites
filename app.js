@@ -283,6 +283,10 @@
     const panelAta = qs("panelAta");
     const btnSalvarAta = qs("btnSalvarAta");
     const btnCancelarAta = qs("btnCancelarAta");
+    const btnInserirLista = qs("btnInserirLista");
+    const btnGerarPdfAta = qs("btnGerarPdfAta");
+    const ataUrlAssinada = qs("ataUrlAssinada");
+    const btnPublicarAta = qs("btnPublicarAta");
 
     let session = null; // { idUsuario, perfil, nome, comite, email }
     let reunioes = [];
@@ -556,7 +560,7 @@
         right.className = "row";
 
         const sel = document.createElement("select");
-        ["Membro", "Presidente"].forEach((x) => {
+        ["Membro", "Secretario", "Presidente"].forEach((x) => {
           const o = document.createElement("option");
           o.value = x;
           o.textContent = x;
@@ -660,6 +664,12 @@
 
     async function abrirAta() {
       if (!reuniaoAtual) return;
+
+      if (!session || (session.perfil !== "Admin" && session.perfil !== "Presidente" && session.perfil !== "Secretario")) {
+        setNotice("err", "Sem permissão.");
+        return;
+      }
+
       panelAta.classList.remove("hidden");
 
       if (!editor) {
@@ -668,7 +678,13 @@
         });
       }
 
-      editor.setData("<p>Digite a ata aqui...</p>");
+      try {
+        const r = await api({ acao: "obterAtaRascunho", idToken, idReuniao: reuniaoAtual.idReuniao });
+        editor.setData(r.html || "<p>Digite a ata aqui...</p>");
+        if (ataUrlAssinada) ataUrlAssinada.value = (r.ataPdfAssinadaLink || "").toString();
+      } catch (e) {
+        editor.setData("<p>Digite a ata aqui...</p>");
+      }
     }
 
     async function salvarAta() {
@@ -678,7 +694,7 @@
       btnSalvarAta.disabled = true;
       try {
         const html = editor.getData();
-        const r = await api({ acao: "salvarAta", idToken, idReuniao: reuniaoAtual.idReuniao, html });
+        const r = await api({ acao: "salvarAtaRascunho", idToken, idReuniao: reuniaoAtual.idReuniao, html });
         if (r.sucesso) {
           setNotice("ok", "Ata salva.");
           panelAta.classList.add("hidden");
@@ -692,6 +708,54 @@
         setNotice("err", e.message);
       } finally {
         btnSalvarAta.disabled = false;
+      }
+    }
+
+    async function inserirListaPresenca() {
+      if (!reuniaoAtual || !editor) return;
+      btnInserirLista.disabled = true;
+      try {
+        const r = await api({ acao: "gerarListaPresencaHtml", idToken, idReuniao: reuniaoAtual.idReuniao });
+        const current = editor.getData() || "";
+        editor.setData(current + "<hr/>" + (r.html || ""));
+        setNotice("ok", "Lista inserida na ATA.");
+      } catch (e) {
+        setNotice("err", e.message);
+      } finally {
+        btnInserirLista.disabled = false;
+      }
+    }
+
+    async function gerarPdfAta() {
+      if (!reuniaoAtual || !editor) return;
+      btnGerarPdfAta.disabled = true;
+      try {
+        const html = editor.getData();
+        const r = await api({ acao: "gerarPdfAta", idToken, idReuniao: reuniaoAtual.idReuniao, html });
+        if (r.sucesso && r.url) window.open(r.url, "_blank");
+        else setNotice("err", r.mensagem || "Não foi possível gerar PDF.");
+      } catch (e) {
+        setNotice("err", e.message);
+      } finally {
+        btnGerarPdfAta.disabled = false;
+      }
+    }
+
+    async function publicarAta() {
+      if (!reuniaoAtual) return;
+      const urlAssinada = (ataUrlAssinada?.value || "").trim();
+      if (!urlAssinada) return setNotice("err", "Cole o link do PDF assinado.");
+      btnPublicarAta.disabled = true;
+      try {
+        const r = await api({ acao: "publicarAtaAssinada", idToken, idReuniao: reuniaoAtual.idReuniao, urlAssinada });
+        if (r.sucesso) {
+          setNotice("ok", "ATA publicada.");
+          await carregarReunioes();
+        }
+      } catch (e) {
+        setNotice("err", e.message);
+      } finally {
+        btnPublicarAta.disabled = false;
       }
     }
 
@@ -725,6 +789,9 @@
     btnAta?.addEventListener("click", abrirAta);
     btnCancelarAta?.addEventListener("click", () => panelAta.classList.add("hidden"));
     btnSalvarAta?.addEventListener("click", salvarAta);
+    btnInserirLista?.addEventListener("click", inserirListaPresenca);
+    btnGerarPdfAta?.addEventListener("click", gerarPdfAta);
+    btnPublicarAta?.addEventListener("click", publicarAta);
 
     auth.onAuthStateChanged(async (user) => {
       if (!user) {
