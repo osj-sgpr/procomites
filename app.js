@@ -18,6 +18,14 @@
     const base = window.APPS_SCRIPT_URL || (typeof APPS_SCRIPT_URL !== "undefined" ? APPS_SCRIPT_URL : "");
     if (!base) return Promise.reject(new Error("APPS_SCRIPT_URL não configurada."));
 
+    if (payload && payload.acao !== "login") {
+      const sid = window.__SID__;
+      if (sid) {
+        payload.sid = sid;
+        if (payload.idToken) delete payload.idToken;
+      }
+    }
+
     return new Promise((resolve, reject) => {
       const cb = "__cb_" + Math.random().toString(36).slice(2);
       const timeoutMs = 25000;
@@ -282,6 +290,9 @@
     const btnFecharReuniao = qs("btnFecharReuniao");
     const btnPendentes = qs("btnPendentes");
     const btnConfirmar = qs("btnConfirmar");
+    const panelValidarParticipacao = qs("panelValidarParticipacao");
+    const btnRecarregarValidacao = qs("btnRecarregarValidacao");
+    const listaValidacao = qs("listaValidacao");
     const btnRelatorio = qs("btnRelatorio");
     const btnAta = qs("btnAta");
 
@@ -442,6 +453,7 @@
       if (reuniaoStatus) reuniaoStatus.textContent = `Status: ${r.status || "-"}`;
       clearTables();
       panelAta.classList.add("hidden");
+      panelValidarParticipacao?.classList.add("hidden");
       await atualizarListas();
     }
 
@@ -485,8 +497,75 @@
     }
 
     async function confirmarParticipacao() {
-      await atualizarListas();
-      qs("tblPresentes")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (!reuniaoAtual) return;
+      if (!session || (session.perfil !== "Admin" && session.perfil !== "Presidente" && session.perfil !== "Secretario")) {
+        setNotice("err", "Sem permissão.");
+        return;
+      }
+      panelValidarParticipacao?.classList.remove("hidden");
+      await carregarValidacoes();
+      panelValidarParticipacao?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function renderValidacoes(items) {
+      if (!listaValidacao) return;
+      listaValidacao.innerHTML = "";
+      if (!items.length) {
+        const div = document.createElement("div");
+        div.className = "notice";
+        div.textContent = "Nenhum pré-confirmado pendente de validação.";
+        listaValidacao.appendChild(div);
+        return;
+      }
+
+      items.forEach((x) => {
+        const item = document.createElement("div");
+        item.className = "item";
+
+        const left = document.createElement("div");
+        const h = document.createElement("h3");
+        h.textContent = x.nome || x.cpf || "-";
+        const p = document.createElement("p");
+        p.textContent = `${x.cpf || ""} • ${x.orgao || ""} • ${x.cidade || ""} • ${x.perfil || ""}`;
+        left.appendChild(h);
+        left.appendChild(p);
+
+        const right = document.createElement("div");
+        right.className = "row";
+        const btn = document.createElement("button");
+        btn.className = "primary";
+        btn.textContent = "Validar";
+        btn.addEventListener("click", async () => {
+          btn.disabled = true;
+          try {
+            await api({ acao: "validarParticipacao", idToken, idReuniao: reuniaoAtual.idReuniao, cpf: x.cpf });
+            await carregarValidacoes();
+          } catch (e) {
+            setNotice("err", e.message);
+          } finally {
+            btn.disabled = false;
+          }
+        });
+        right.appendChild(btn);
+
+        item.appendChild(left);
+        item.appendChild(right);
+        listaValidacao.appendChild(item);
+      });
+    }
+
+    async function carregarValidacoes() {
+      if (!reuniaoAtual) return;
+      if (!session) return;
+      btnRecarregarValidacao && (btnRecarregarValidacao.disabled = true);
+      try {
+        const r = await api({ acao: "listarParaValidacao", idToken, idReuniao: reuniaoAtual.idReuniao });
+        renderValidacoes(r.itens || []);
+      } catch (e) {
+        setNotice("err", e.message);
+      } finally {
+        btnRecarregarValidacao && (btnRecarregarValidacao.disabled = false);
+      }
     }
 
     async function doLogin(user) {
@@ -513,6 +592,8 @@
         nome: r.nome,
         email,
       };
+
+      window.__SID__ = r.sid || null;
 
       userLine.textContent = `${session.nome || ""} • ${session.email || ""} • ${session.perfil || ""}`;
 
@@ -933,6 +1014,7 @@
     btnFecharReuniao?.addEventListener("click", fecharReuniao);
     btnPendentes?.addEventListener("click", atualizarPendentes);
     btnConfirmar?.addEventListener("click", confirmarParticipacao);
+    btnRecarregarValidacao?.addEventListener("click", carregarValidacoes);
 
     btnAta?.addEventListener("click", abrirAta);
     btnCancelarAta?.addEventListener("click", () => panelAta.classList.add("hidden"));
