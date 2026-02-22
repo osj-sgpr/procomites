@@ -80,6 +80,13 @@
     return d.toLocaleDateString("pt-BR", { timeZone: "UTC" });
   }
 
+  function isInvalidActionError(err, actionName) {
+    const msg = (err && err.message ? err.message : "").toLowerCase();
+    if (!actionName) return msg.indexOf("ação inválida") >= 0 || msg.indexOf("acao invalida") >= 0;
+    const a = String(actionName).toLowerCase();
+    return msg.indexOf("ação inválida: " + a) >= 0 || msg.indexOf("acao invalida: " + a) >= 0;
+  }
+
   // -------------------- Página pública (validar-presenca.html) --------------------
   async function initPublic() {
     let idReuniao = (getUrlParam("id") || "").trim();
@@ -430,6 +437,10 @@
     const publicContatoEndereco = qs("publicContatoEndereco");
 
     const panelPortalGestao = qs("panelPortalGestao");
+    const btnPortalTabConfig = qs("btnPortalTabConfig");
+    const btnPortalTabNoticias = qs("btnPortalTabNoticias");
+    const portalConfigTabContent = qs("portalConfigTabContent");
+    const portalNoticiasTabContent = qs("portalNoticiasTabContent");
     const cfgBannerTitulo = qs("cfgBannerTitulo");
     const cfgBannerSubtitulo = qs("cfgBannerSubtitulo");
     const cfgBannerImagem = qs("cfgBannerImagem");
@@ -488,6 +499,17 @@
         faleConoscoTelefone: "",
         faleConoscoEndereco: "",
       };
+    }
+
+    function setPortalTab(tab) {
+      const isConfig = tab === "config";
+      const isNoticias = tab === "noticias";
+
+      if (btnPortalTabConfig) btnPortalTabConfig.classList.toggle("active", isConfig);
+      if (btnPortalTabNoticias) btnPortalTabNoticias.classList.toggle("active", isNoticias);
+
+      if (portalConfigTabContent) portalConfigTabContent.classList.toggle("hidden", !isConfig);
+      if (portalNoticiasTabContent) portalNoticiasTabContent.classList.toggle("hidden", !isNoticias);
     }
 
     function mergePortalConfig(cfg) {
@@ -655,18 +677,9 @@
 
         const btnEditar = document.createElement("button");
         btnEditar.textContent = "Editar";
-        btnEditar.addEventListener("click", async () => {
-          await garantirEditorNoticia();
-          formNoticia?.classList.remove("hidden");
-          noticiaAtualId = n.idNoticia || null;
-          if (notTitulo) notTitulo.value = n.titulo || "";
-          if (notResumo) notResumo.value = n.resumo || "";
-          if (notImagem) notImagem.value = n.imagemUrl || "";
-          if (notData) notData.value = (n.dataPublicacao || "").toString().slice(0, 10);
-          if (notStatus) notStatus.value = n.status || "Rascunho";
-          if (notDestaqueHome) notDestaqueHome.value = n.destaqueHome || "NÃO";
-          if (notComite) notComite.value = n.comite || "";
-          if (noticiaEditor) noticiaEditor.setData(n.conteudoHtml || "<p>Digite a notícia...</p>");
+        btnEditar.addEventListener("click", () => {
+          const id = encodeURIComponent((n.idNoticia || "").toString());
+          window.location.href = "./noticia-editor.html?id=" + id;
         });
 
         const btnExcluir = document.createElement("button");
@@ -700,13 +713,18 @@
         const r = await api({ acao: "listarNoticiasGestao", idToken });
         renderNoticiasGestao(r.noticias || []);
       } catch (e) {
+        if (isInvalidActionError(e, "listarNoticiasGestao")) {
+          setNotice("err", "Módulo de notícias indisponível no backend atual. Reimplante o Web App do Apps Script para habilitar o cadastro.");
+          renderNoticiasGestao([]);
+          return;
+        }
         setNotice("err", e.message);
       }
     }
 
     async function salvarConfigPortal() {
-      if (!session || (session.perfil !== "Admin" && session.perfil !== "Presidente")) {
-        setNotice("err", "Sem permissão.");
+      if (!session || session.perfil !== "Admin") {
+        setNotice("err", "Somente Administrador pode salvar Configurações do Portal.");
         return;
       }
       btnSalvarPortalConfig.disabled = true;
@@ -715,6 +733,10 @@
         setNotice("ok", "Configurações do portal salvas.");
         await carregarPortalPublico();
       } catch (e) {
+        if (isInvalidActionError(e, "salvarPortalConfig")) {
+          setNotice("err", "Não foi possível salvar: ação salvarPortalConfig indisponível no backend atual. Reimplante o Web App do Apps Script.");
+          return;
+        }
         setNotice("err", e.message);
       } finally {
         btnSalvarPortalConfig.disabled = false;
@@ -748,6 +770,10 @@
         await carregarNoticiasGestao();
         await carregarPortalPublico();
       } catch (e) {
+        if (isInvalidActionError(e, "salvarNoticia")) {
+          setNotice("err", "Não foi possível salvar: ação salvarNoticia indisponível no backend atual. Reimplante o Web App do Apps Script.");
+          return;
+        }
         setNotice("err", e.message);
       } finally {
         btnSalvarNoticia.disabled = false;
@@ -768,8 +794,26 @@
       } else {
         notComite.disabled = false;
       }
-      const r = await api({ acao: "obterPortalPublico" });
-      setPortalForm(r.config || {});
+
+      if (session.perfil === "Admin") {
+        if (btnPortalTabConfig) btnPortalTabConfig.classList.remove("hidden");
+        if (portalConfigTabContent) portalConfigTabContent.classList.remove("hidden");
+        setPortalTab("config");
+        try {
+          const r = await api({ acao: "obterPortalPublico" });
+          setPortalForm(r.config || {});
+        } catch (e) {
+          setPortalForm(getPortalDefaults());
+          if (!isInvalidActionError(e, "obterPortalPublico")) {
+            setNotice("err", e.message);
+          }
+        }
+      } else {
+        if (btnPortalTabConfig) btnPortalTabConfig.classList.add("hidden");
+        if (portalConfigTabContent) portalConfigTabContent.classList.add("hidden");
+        setPortalTab("noticias");
+      }
+
       await carregarNoticiasGestao();
     }
 
@@ -1150,6 +1194,10 @@
       };
 
       window.__SID__ = r.sid || null;
+      try {
+        if (window.__SID__) localStorage.setItem("procomites.sid", window.__SID__);
+        else localStorage.removeItem("procomites.sid");
+      } catch (e) {}
 
       userLine.textContent = `${session.nome || ""} • ${session.email || ""} • ${session.perfil || ""}`;
 
@@ -1583,10 +1631,10 @@
     btnGerarPdfAta?.addEventListener("click", gerarPdfAta);
     btnUploadAta?.addEventListener("click", uploadAtaAssinada);
     btnSalvarPortalConfig?.addEventListener("click", salvarConfigPortal);
+    btnPortalTabConfig?.addEventListener("click", () => setPortalTab("config"));
+    btnPortalTabNoticias?.addEventListener("click", () => setPortalTab("noticias"));
     btnNovaNoticia?.addEventListener("click", async () => {
-      await garantirEditorNoticia();
-      resetFormNoticia();
-      formNoticia?.classList.toggle("hidden");
+      window.location.href = "./noticia-editor.html";
     });
     btnSalvarNoticia?.addEventListener("click", salvarNoticiaPortal);
     btnCancelarNoticia?.addEventListener("click", () => {
@@ -1613,6 +1661,7 @@
         session = null;
         idToken = null;
         noticiaAtualId = null;
+        try { localStorage.removeItem("procomites.sid"); } catch (e) {}
         setNotice(null, "");
         carregarPortalPublico();
         return;

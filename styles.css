@@ -294,6 +294,89 @@ hr {
   text-align: right;
 }
 
+.panel-module-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.panel-module-tab {
+  border: 1px solid rgba(0, 122, 138, 0.24);
+  background: #f7fcfd;
+  color: #1b3c4f;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.panel-module-tab.active {
+  border-color: rgba(0, 122, 138, 0.5);
+  background: linear-gradient(180deg, rgba(0,122,138,0.16), rgba(0,122,138,0.08));
+}
+
+.news-editor-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 14px;
+  align-items: start;
+}
+
+.news-editor-main {
+  min-width: 0;
+}
+
+.news-editor-side .card {
+  padding: 12px;
+}
+
+.editor-tools-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 10px;
+}
+
+.emoji-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.emoji-btn {
+  min-width: 40px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.preset-image-list {
+  display: grid;
+  gap: 8px;
+}
+
+.preset-image-btn {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 8px;
+  align-items: center;
+  text-align: left;
+  width: 100%;
+  padding: 8px;
+}
+
+.preset-image-btn img {
+  width: 64px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.preset-image-btn span {
+  font-size: 12px;
+  color: #23475b;
+  font-weight: 700;
+}
+
 .news-mini-card {
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -417,8 +500,19 @@ hr {
   font-size: 13px;
 }
 
-.notice.ok { border-color: rgba(34,197,94,0.35); color: rgba(208,255,226,0.9); }
-.notice.err { border-color: rgba(255,90,118,0.35); color: rgba(255,220,226,0.9); }
+.notice.ok {
+  border-color: rgba(34,197,94,0.45);
+  background: #e9f9ef;
+  color: #0f5a34;
+  font-weight: 600;
+}
+
+.notice.err {
+  border-color: rgba(220,38,38,0.4);
+  background: #fdecec;
+  color: #8b1c1c;
+  font-weight: 600;
+}
 
 .code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -435,5 +529,9 @@ hr {
 
   .noticia-titulo {
     font-size: 20px;
+  }
+
+  .news-editor-layout {
+    grid-template-columns: 1fr;
   }
 }

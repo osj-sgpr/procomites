@@ -8,7 +8,7 @@
   <meta http-equiv="Expires" content="0" />
   <title>ProComitês Tocantins - Painel de Gestão</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="./styles.css?v=20260222f" />
+  <link rel="stylesheet" href="./styles.css?v=20260222h" />
 </head>
 <body>
   <div class="container">
@@ -142,10 +142,15 @@
 
         <div id="panelPortalGestao" class="hidden" style="margin-top: 14px;">
           <hr />
-          <div style="font-weight: 700;">Configurações do Portal</div>
-          <div class="small">Banner da Home, Fale Conosco e notícias (Admin/Presidente).</div>
+          <div style="font-weight: 700;">Portal - Administração</div>
+          <div class="small">Use as abas abaixo para gerenciar Configurações e Notícias.</div>
 
-          <div class="card" style="margin-top: 10px;">
+          <div class="panel-module-tabs" style="margin-top: 10px;">
+            <button id="btnPortalTabConfig" type="button" class="panel-module-tab">Configurações do Portal</button>
+            <button id="btnPortalTabNoticias" type="button" class="panel-module-tab">Notícia Editor</button>
+          </div>
+
+          <div id="portalConfigTabContent" class="card" style="margin-top: 10px;">
             <div style="font-weight: 600; margin-bottom: 8px;">Home - Banner principal</div>
             <div class="row">
               <div class="field">
@@ -202,13 +207,13 @@
             </div>
           </div>
 
-          <div class="card" style="margin-top: 10px;">
+          <div id="portalNoticiasTabContent" class="card hidden" style="margin-top: 10px;">
             <div class="row" style="justify-content: space-between; align-items: center;">
               <div>
                 <div style="font-weight: 600;">Notícias do Portal</div>
-                <div class="small">Cadastro com editor rico (texto, tabelas e imagens).</div>
+                <div class="small">Cadastro em página dedicada com editor completo.</div>
               </div>
-              <button id="btnNovaNoticia">Nova notícia</button>
+              <button id="btnNovaNoticia">Abrir Notícia Editor</button>
             </div>
 
             <div id="formNoticia" class="hidden" style="margin-top: 10px;">
@@ -388,6 +393,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
   <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
-  <script src="./app.js?v=20260222f"></script>
+  <script src="./app.js?v=20260222h"></script>
 </body>
 </html>

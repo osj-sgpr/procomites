@@ -78,6 +78,12 @@
     };
   }
 
+  function isInvalidActionError(err, actionName) {
+    var msg = (err && err.message ? err.message : "").toLowerCase();
+    var action = (actionName || "").toLowerCase();
+    return msg.indexOf("ação inválida: " + action) >= 0 || msg.indexOf("acao invalida: " + action) >= 0;
+  }
+
   async function loadPortalPublicoData() {
     try {
       var r = await api({ acao: "obterPortalPublico" });
@@ -91,11 +97,21 @@
         throw e;
       }
 
-      var noticiasResp = await api({ acao: "listarNoticiasPublicas", limit: 3 });
-      return {
-        config: mergeConfig({}),
-        ultimasNoticias: noticiasResp.noticias || [],
-      };
+      try {
+        var noticiasResp = await api({ acao: "listarNoticiasPublicas", limit: 3 });
+        return {
+          config: mergeConfig({}),
+          ultimasNoticias: noticiasResp.noticias || [],
+        };
+      } catch (e2) {
+        if (isInvalidActionError(e2, "listarNoticiasPublicas")) {
+          return {
+            config: mergeConfig({}),
+            ultimasNoticias: [],
+          };
+        }
+        throw e2;
+      }
     }
   }
 
@@ -205,8 +221,22 @@
 
     async function load() {
       var comite = (filter && filter.value ? filter.value : "").trim();
-      var r = await api({ acao: "listarNoticiasPublicas", comite: comite });
-      renderNoticias(r.noticias || []);
+      try {
+        var r = await api({ acao: "listarNoticiasPublicas", comite: comite });
+        renderNoticias(r.noticias || []);
+      } catch (e) {
+        if (isInvalidActionError(e, "listarNoticiasPublicas")) {
+          renderNoticias([]);
+          var notice = qs("publicNotice");
+          if (notice) {
+            notice.classList.remove("hidden");
+            notice.classList.add("err");
+            notice.textContent = "Módulo de notícias indisponível no backend atual. Reimplante o Apps Script para habilitar.";
+          }
+          return;
+        }
+        throw e;
+      }
     }
 
     filter && filter.addEventListener("change", function () {

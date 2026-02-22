@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>ProComitês - Editor de Notícia</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="./styles.css?v=20260222h" />
+</head>
+<body>
+  <div class="container site-shell">
+    <header class="site-header">
+      <div class="brand">
+        <h1>Editor de notícia</h1>
+        <p>Cadastro ampliado para publicação no Portal ProComitês</p>
+      </div>
+      <nav class="portal-nav">
+        <a class="portal-nav-link" href="./index.html">Home</a>
+        <a class="portal-nav-link" href="./noticias.html">Notícias</a>
+        <a class="portal-nav-link" href="./comites.html">Comitês</a>
+        <a class="portal-nav-link" href="./fale-conosco.html">Fale Conosco</a>
+        <a class="portal-nav-link active" href="./noticia-editor.html">Editor de Notícia</a>
+        <a class="portal-nav-link" href="./painel.html">Painel</a>
+      </nav>
+    </header>
+
+    <div id="notice" class="notice hidden"></div>
+
+    <section class="card" id="authCard">
+      <div class="row" style="justify-content: space-between; align-items: center;">
+        <div>
+          <div style="font-weight: 700;">Autenticação</div>
+          <div id="userLine" class="small">Faça login para editar notícias.</div>
+        </div>
+        <div class="row">
+          <button id="btnLogin" class="primary">Entrar com Google</button>
+          <button id="btnLogout" class="danger hidden">Sair</button>
+          <a href="./painel.html" class="portal-nav-link">Voltar ao painel</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="editorCard" class="card hidden" style="margin-top: 14px;">
+      <div class="news-editor-layout">
+        <div class="news-editor-main">
+          <div class="row">
+            <div class="field">
+              <label>Título</label>
+              <input id="notTitulo" placeholder="Título da notícia" />
+            </div>
+            <div class="field">
+              <label>Comitê</label>
+              <select id="notComite"></select>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top: 10px;">
+            <div class="field">
+              <label>Resumo</label>
+              <textarea id="notResumo" rows="4" placeholder="Resumo da notícia"></textarea>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top: 10px;">
+            <div class="field">
+              <label>Imagem de capa (URL)</label>
+              <input id="notImagem" placeholder="https://..." />
+            </div>
+            <div class="field">
+              <label>Data de publicação</label>
+              <input id="notData" type="date" />
+            </div>
+          </div>
+
+          <div class="row" style="margin-top: 10px;">
+            <div class="field">
+              <label>Status</label>
+              <select id="notStatus">
+                <option value="Rascunho">Rascunho</option>
+                <option value="Publicado">Publicado</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Destaque na Home</label>
+              <select id="notDestaqueHome">
+                <option value="NÃO">Não</option>
+                <option value="SIM">Sim</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top: 12px;">
+            <label>Conteúdo da notícia</label>
+            <div class="editor-tools-row">
+              <button type="button" id="btnJustify" title="Justificado">Justificar</button>
+              <button type="button" id="btnAlignLeft" title="Alinhar à esquerda">Esquerda</button>
+              <button type="button" id="btnAlignCenter" title="Centralizar">Centro</button>
+              <button type="button" id="btnAlignRight" title="Alinhar à direita">Direita</button>
+              <button type="button" id="btnSpaceNormal">Espaço normal</button>
+              <button type="button" id="btnSpaceConfortavel">Espaço confortável</button>
+            </div>
+            <textarea id="editorConteudo"></textarea>
+          </div>
+
+          <div class="row" style="margin-top: 12px; justify-content: flex-end;">
+            <button id="btnSalvarNoticia" class="primary">Salvar notícia</button>
+            <a href="./painel.html" class="portal-nav-link">Fechar editor</a>
+          </div>
+        </div>
+
+        <aside class="news-editor-side">
+          <div class="card">
+            <div style="font-weight: 700; margin-bottom: 8px;">Inserir emojis</div>
+            <div class="emoji-list" id="emojiList"></div>
+          </div>
+
+          <div class="card" style="margin-top: 10px;">
+            <div style="font-weight: 700; margin-bottom: 8px;">Figuras pré-cadastradas</div>
+            <div id="presetImages" class="preset-image-list"></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    window.APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPGdYJ6kYEPPDCZUaoCqyxoDvtlwQOTunvvkPP2RHjMg0TzvflUQdfMcGxE-hSTgT3/exec";
+  </script>
+  <script>
+    window.firebaseConfig = {
+      apiKey: "AIzaSyBFbAihI-At7oeWG39CTtivdV1Op3gVOxk",
+      authDomain: "sistema-procomites.firebaseapp.com",
+      projectId: "sistema-procomites",
+      storageBucket: "sistema-procomites.firebasestorage.app",
+      messagingSenderId: "310894913611",
+      appId: "1:310894913611:web:58df1816ccacb8feb5c5ce"
+    };
+  </script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://cdn.ckeditor.com/4.22.1/full-all/ckeditor.js"></script>
+  <script src="./noticia-editor.js?v=20260222h"></script>
+</body>
+</html>
