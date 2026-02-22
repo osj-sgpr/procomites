@@ -3,9 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>ProComitês - Validar presença</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./styles.css?v=20260222" />
 </head>
 <body>
   <div class="container">
@@ -66,6 +69,22 @@
             <input id="orgao" />
           </div>
         </div>
+        <div class="row" style="margin-top: 10px;">
+          <div class="field">
+            <label>Cidade que reside</label>
+            <input id="cidade" />
+          </div>
+          <div class="field">
+            <label>Perfil</label>
+            <select id="perfil">
+              <option value="Membro">Membro</option>
+              <option value="Secretario">Secretário</option>
+              <option value="Vice-Presidente">Vice-Presidente</option>
+              <option value="Presidente">Presidente</option>
+              <option value="Visitante">Visitante</option>
+            </select>
+          </div>
+        </div>
         <div class="row" style="margin-top: 10px; align-items: flex-end;">
           <div class="field">
             <label>Necessita diária?</label>
@@ -93,6 +112,6 @@
   <script>
     window.APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPGdYJ6kYEPPDCZUaoCqyxoDvtlwQOTunvvkPP2RHjMg0TzvflUQdfMcGxE-hSTgT3/exec";
   </script>
-  <script src="./app.js?v=20260220"></script>
+  <script src="./app.js?v=20260222"></script>
 </body>
 </html>
