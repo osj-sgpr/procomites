@@ -153,6 +153,51 @@ hr {
   gap: 10px;
 }
 
+.committee-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.committee-tab {
+  border: 1px solid rgba(0, 122, 138, 0.24);
+  background: #f7fcfd;
+  color: #1b3c4f;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.committee-tab.active {
+  border-color: rgba(0, 122, 138, 0.5);
+  background: linear-gradient(180deg, rgba(0,122,138,0.16), rgba(0,122,138,0.08));
+}
+
+.meeting-open-item {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  background: #fbfdfe;
+}
+
+.meeting-open-item h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.meeting-open-meta {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.meeting-open-item p {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #214358;
+}
+
 .item {
   border: 1px solid var(--border);
   border-radius: 12px;
