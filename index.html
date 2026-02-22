@@ -180,10 +180,11 @@
             </div>
             <div class="row" style="margin-top: 10px; align-items: flex-end;">
               <div class="field" style="flex: 1;">
-                <label>Link do PDF assinado (para publicar)</label>
-                <input id="ataUrlAssinada" placeholder="Cole aqui o link do PDF assinado no Drive" />
+                <label>PDF assinado (upload)</label>
+                <input id="ataPdfAssinada" type="file" accept="application/pdf" />
+                <div id="ataUploadStatus" class="small" style="margin-top: 6px;"></div>
               </div>
-              <button id="btnPublicarAta" class="primary">Publicar ATA assinada</button>
+              <button id="btnUploadAta" class="primary">Enviar e publicar</button>
             </div>
             <div class="row" style="margin-top: 10px; justify-content: flex-end;">
               <button id="btnSalvarAta" class="primary">Salvar ATA</button>
