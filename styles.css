@@ -1,19 +1,25 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+
 :root {
-  --bg: #0b1220;
-  --card: #111a2e;
-  --muted: #b7c4df;
-  --text: #e8eefc;
-  --accent: #4f8cff;
+  --bg: #edf4f6;
+  --card: #ffffff;
+  --muted: #5f7282;
+  --text: #102030;
+  --accent: #007a8a;
+  --accent-2: #1f9f6a;
   --danger: #ff5a76;
-  --ok: #22c55e;
-  --border: rgba(255,255,255,0.08);
+  --ok: #148f57;
+  --border: rgba(16,32,48,0.12);
 }
 
 * { box-sizing: border-box; }
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  background: radial-gradient(1200px 600px at 30% 0%, #17254a 0%, var(--bg) 60%);
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  background:
+    radial-gradient(1200px 700px at 100% -5%, rgba(31,159,106,0.16) 0%, rgba(31,159,106,0) 60%),
+    radial-gradient(900px 550px at -5% -10%, rgba(0,122,138,0.2) 0%, rgba(0,122,138,0) 65%),
+    var(--bg);
   color: var(--text);
 }
 
@@ -28,7 +34,11 @@ header {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 18px;
+  margin: 8px 0 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: linear-gradient(120deg, rgba(0,122,138,0.08), rgba(31,159,106,0.06));
 }
 
 .brand {
@@ -38,23 +48,24 @@ header {
 }
 
 .brand h1 {
-  font-size: 18px;
+  font-size: 24px;
   margin: 0;
-  letter-spacing: 0.2px;
+  letter-spacing: 0;
 }
 
 .brand p {
   margin: 0;
   color: var(--muted);
   font-size: 13px;
+  font-weight: 600;
 }
 
 .card {
-  background: rgba(17,26,46,0.9);
+  background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 12px 28px rgba(8, 39, 63, 0.08);
 }
 
 .grid {
@@ -75,7 +86,7 @@ header {
 }
 
 input, select, textarea {
-  background: rgba(255,255,255,0.04);
+  background: #f8fbfc;
   border: 1px solid var(--border);
   color: var(--text);
   border-radius: 10px;
@@ -94,16 +105,20 @@ label {
 button {
   appearance: none;
   border: 1px solid var(--border);
-  background: rgba(255,255,255,0.06);
+  background: #f5f9fb;
   color: var(--text);
   padding: 10px 12px;
   border-radius: 10px;
   cursor: pointer;
 }
 
+button:hover {
+  filter: brightness(0.97);
+}
+
 button.primary {
-  border-color: rgba(79,140,255,0.5);
-  background: rgba(79,140,255,0.18);
+  border-color: rgba(0,122,138,0.4);
+  background: linear-gradient(180deg, rgba(0,122,138,0.14), rgba(0,122,138,0.1));
 }
 
 button.danger {
@@ -120,8 +135,10 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
   padding: 6px 10px;
   border-radius: 999px;
   border: 1px solid var(--border);
-  color: var(--muted);
+  color: #23475b;
+  background: rgba(255,255,255,0.72);
   font-size: 12px;
+  font-weight: 700;
 }
 
 hr {
@@ -144,6 +161,7 @@ hr {
   gap: 12px;
   justify-content: space-between;
   align-items: flex-start;
+  background: #fbfdfe;
 }
 
 .item h3 {
@@ -174,8 +192,8 @@ hr {
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: rgba(255,255,255,0.04);
-  color: rgba(232,238,252,0.92);
+  background: #f5fafc;
+  color: #12324a;
   font-size: 13px;
 }
 
@@ -186,5 +204,5 @@ hr {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 14px;
   letter-spacing: 0.6px;
-  color: rgba(232,238,252,0.95);
+  color: #0c4c66;
 }
