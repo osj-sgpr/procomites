@@ -8,7 +8,7 @@
   <meta http-equiv="Expires" content="0" />
   <title>ProComitês Tocantins - Gestão dos Comitês de Bacia</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="./styles.css?v=20260222c" />
+  <link rel="stylesheet" href="./styles.css?v=20260222d" />
 </head>
 <body>
   <div class="container">
@@ -25,6 +25,34 @@
     </header>
 
     <div id="notice" class="notice hidden"></div>
+
+    <section class="card portal-public" style="margin-bottom: 14px;">
+      <div id="publicHero" class="public-hero">
+        <div class="public-hero-overlay">
+          <div class="small" style="color: #d3eef5;">Portal Oficial</div>
+          <h2 id="heroTitulo">Comitês de Bacias Hidrográficas do Estado do Tocantins</h2>
+          <p id="heroSubtitulo">Acompanhe reuniões, publicações e notícias oficiais dos comitês.</p>
+          <a id="heroBotao" class="hero-link" href="#" target="_blank" rel="noopener">Saiba mais</a>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top: 14px; align-items: flex-start;">
+        <div class="portal-news-col">
+          <div style="font-weight: 700;">Últimas notícias</div>
+          <div class="small">Sincronizado com a aba de notícias.</div>
+          <div id="publicUltimasNoticias" class="list" style="margin-top: 10px;"></div>
+        </div>
+        <div class="portal-contact-col">
+          <div id="publicContatoTitulo" style="font-weight: 700;">Fale Conosco</div>
+          <div id="publicContatoTexto" class="small" style="margin-top: 6px;"></div>
+          <div class="contact-lines" style="margin-top: 10px;">
+            <div><strong>Email:</strong> <span id="publicContatoEmail">-</span></div>
+            <div><strong>Telefone:</strong> <span id="publicContatoTelefone">-</span></div>
+            <div><strong>Endereço:</strong> <span id="publicContatoEndereco">-</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <div class="grid">
       <div class="card">
@@ -126,6 +154,134 @@
             <button id="btnCarregarPendentes">Atualizar pendentes</button>
           </div>
           <div id="listaPendentes" class="list" style="margin-top: 12px;"></div>
+        </div>
+
+        <div id="panelPortalGestao" class="hidden" style="margin-top: 14px;">
+          <hr />
+          <div style="font-weight: 700;">Configurações do Portal</div>
+          <div class="small">Banner da Home, Fale Conosco e notícias (Admin/Presidente).</div>
+
+          <div class="card" style="margin-top: 10px;">
+            <div style="font-weight: 600; margin-bottom: 8px;">Home - Banner principal</div>
+            <div class="row">
+              <div class="field">
+                <label>Título</label>
+                <input id="cfgBannerTitulo" placeholder="Título do banner" />
+              </div>
+              <div class="field">
+                <label>Subtítulo</label>
+                <input id="cfgBannerSubtitulo" placeholder="Subtítulo institucional" />
+              </div>
+            </div>
+            <div class="row" style="margin-top: 10px;">
+              <div class="field">
+                <label>URL da imagem do banner</label>
+                <input id="cfgBannerImagem" placeholder="https://..." />
+              </div>
+              <div class="field">
+                <label>Texto do botão</label>
+                <input id="cfgBannerBotaoTexto" placeholder="Saiba mais" />
+              </div>
+              <div class="field">
+                <label>URL do botão</label>
+                <input id="cfgBannerBotaoUrl" placeholder="https://..." />
+              </div>
+            </div>
+
+            <div style="font-weight: 600; margin: 14px 0 8px;">Fale Conosco</div>
+            <div class="row">
+              <div class="field">
+                <label>Título</label>
+                <input id="cfgContatoTitulo" placeholder="Fale Conosco" />
+              </div>
+              <div class="field">
+                <label>Texto</label>
+                <input id="cfgContatoTexto" placeholder="Texto de apoio" />
+              </div>
+            </div>
+            <div class="row" style="margin-top: 10px;">
+              <div class="field">
+                <label>Email</label>
+                <input id="cfgContatoEmail" placeholder="contato@..." />
+              </div>
+              <div class="field">
+                <label>Telefone</label>
+                <input id="cfgContatoTelefone" placeholder="(63) ..." />
+              </div>
+              <div class="field">
+                <label>Endereço</label>
+                <input id="cfgContatoEndereco" placeholder="Palmas - TO" />
+              </div>
+            </div>
+            <div class="row" style="margin-top: 10px; justify-content: flex-end;">
+              <button id="btnSalvarPortalConfig" class="primary">Salvar configurações</button>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 10px;">
+            <div class="row" style="justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-weight: 600;">Notícias do Portal</div>
+                <div class="small">Cadastro com editor rico (texto, tabelas e imagens).</div>
+              </div>
+              <button id="btnNovaNoticia">Nova notícia</button>
+            </div>
+
+            <div id="formNoticia" class="hidden" style="margin-top: 10px;">
+              <div class="row">
+                <div class="field">
+                  <label>Título</label>
+                  <input id="notTitulo" placeholder="Título da notícia" />
+                </div>
+                <div class="field">
+                  <label>Comitê</label>
+                  <select id="notComite"></select>
+                </div>
+              </div>
+              <div class="row" style="margin-top: 10px;">
+                <div class="field">
+                  <label>Resumo</label>
+                  <textarea id="notResumo" rows="3" placeholder="Resumo para listagens"></textarea>
+                </div>
+              </div>
+              <div class="row" style="margin-top: 10px;">
+                <div class="field">
+                  <label>Imagem de capa (URL)</label>
+                  <input id="notImagem" placeholder="https://..." />
+                </div>
+                <div class="field">
+                  <label>Data de publicação</label>
+                  <input id="notData" type="date" />
+                </div>
+              </div>
+              <div class="row" style="margin-top: 10px;">
+                <div class="field">
+                  <label>Status</label>
+                  <select id="notStatus">
+                    <option value="Rascunho">Rascunho</option>
+                    <option value="Publicado">Publicado</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Destaque na Home</label>
+                  <select id="notDestaqueHome">
+                    <option value="NÃO">Não</option>
+                    <option value="SIM">Sim</option>
+                  </select>
+                </div>
+              </div>
+              <div style="margin-top: 10px;">
+                <label>Conteúdo da notícia</label>
+                <div id="editorNoticia" class="card" style="min-height: 220px; padding: 10px;"></div>
+              </div>
+              <div class="row" style="margin-top: 10px; justify-content: flex-end;">
+                <button id="btnSalvarNoticia" class="primary">Salvar notícia</button>
+                <button id="btnCancelarNoticia">Cancelar</button>
+              </div>
+            </div>
+
+            <div id="listaNoticiasGestao" class="list" style="margin-top: 10px;"></div>
+          </div>
         </div>
       </div>
 
@@ -248,6 +404,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
   <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
-  <script src="./app.js?v=20260222c"></script>
+  <script src="./app.js?v=20260222d"></script>
 </body>
 </html>
