@@ -198,6 +198,77 @@ hr {
   color: #214358;
 }
 
+.portal-public {
+  overflow: hidden;
+}
+
+.public-hero {
+  border-radius: 14px;
+  min-height: 190px;
+  padding: 20px;
+  display: flex;
+  align-items: flex-end;
+  background: linear-gradient(120deg, #0a3f5d, #0f7f87);
+  background-size: cover;
+  background-position: center;
+}
+
+.public-hero-overlay {
+  width: min(760px, 100%);
+  color: #eef9ff;
+}
+
+.public-hero-overlay h2 {
+  margin: 6px 0;
+  font-size: clamp(20px, 3vw, 30px);
+  line-height: 1.18;
+}
+
+.public-hero-overlay p {
+  margin: 0;
+  color: rgba(236, 248, 255, 0.94);
+}
+
+.hero-link {
+  display: inline-flex;
+  margin-top: 12px;
+  color: #d6f6ff;
+  text-decoration: none;
+  font-weight: 700;
+  border-bottom: 1px dashed rgba(214, 246, 255, 0.8);
+}
+
+.portal-news-col,
+.portal-contact-col {
+  flex: 1;
+  min-width: 260px;
+}
+
+.news-mini-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  background: #f7fbfd;
+}
+
+.news-mini-card h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.news-mini-card p {
+  margin: 6px 0 0;
+  color: #244457;
+  font-size: 12px;
+}
+
+.contact-lines {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: #26485d;
+}
+
 .item {
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -250,4 +321,11 @@ hr {
   font-size: 14px;
   letter-spacing: 0.6px;
   color: #0c4c66;
+}
+
+@media (max-width: 900px) {
+  .public-hero {
+    min-height: 160px;
+    padding: 16px;
+  }
 }
