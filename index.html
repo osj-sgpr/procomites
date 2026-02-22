@@ -174,6 +174,17 @@
           <div id="panelAta" class="hidden" style="margin-top: 12px;">
             <div class="small" style="margin-bottom: 8px;">Editor de ATA</div>
             <div id="editorAta" class="card" style="min-height: 220px; padding: 10px;"></div>
+            <div class="row" style="margin-top: 10px; justify-content: space-between; align-items: center;">
+              <button id="btnInserirLista">Inserir lista de presença</button>
+              <button id="btnGerarPdfAta">Gerar PDF (rascunho)</button>
+            </div>
+            <div class="row" style="margin-top: 10px; align-items: flex-end;">
+              <div class="field" style="flex: 1;">
+                <label>Link do PDF assinado (para publicar)</label>
+                <input id="ataUrlAssinada" placeholder="Cole aqui o link do PDF assinado no Drive" />
+              </div>
+              <button id="btnPublicarAta" class="primary">Publicar ATA assinada</button>
+            </div>
             <div class="row" style="margin-top: 10px; justify-content: flex-end;">
               <button id="btnSalvarAta" class="primary">Salvar ATA</button>
               <button id="btnCancelarAta">Cancelar</button>
