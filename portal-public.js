@@ -78,6 +78,27 @@
     };
   }
 
+  async function loadPortalPublicoData() {
+    try {
+      var r = await api({ acao: "obterPortalPublico" });
+      return {
+        config: mergeConfig(r.config || {}),
+        ultimasNoticias: r.ultimasNoticias || [],
+      };
+    } catch (e) {
+      var msg = (e && e.message ? e.message : "").toLowerCase();
+      if (msg.indexOf("ação inválida: obterportalpublico") === -1 && msg.indexOf("acao invalida: obterportalpublico") === -1) {
+        throw e;
+      }
+
+      var noticiasResp = await api({ acao: "listarNoticiasPublicas", limit: 3 });
+      return {
+        config: mergeConfig({}),
+        ultimasNoticias: noticiasResp.noticias || [],
+      };
+    }
+  }
+
   function renderHero(cfg) {
     var hero = qs("publicHero");
     var titulo = qs("heroTitulo");
@@ -134,7 +155,7 @@
   }
 
   async function initHome() {
-    var r = await api({ acao: "obterPortalPublico" });
+    var r = await loadPortalPublicoData();
     var cfg = mergeConfig(r.config || {});
     renderHero(cfg);
     renderLatest(r.ultimasNoticias || []);
@@ -235,7 +256,7 @@
   }
 
   async function initFaleConosco() {
-    var r = await api({ acao: "obterPortalPublico" });
+    var r = await loadPortalPublicoData();
     var cfg = mergeConfig(r.config || {});
     renderContact(cfg);
   }
