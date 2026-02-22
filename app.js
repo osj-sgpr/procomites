@@ -72,15 +72,67 @@
 
   // -------------------- Página pública (validar-presenca.html) --------------------
   async function initPublic() {
-    const idReuniao = getUrlParam("id");
+    let idReuniao = getUrlParam("id");
     const badge = qs("reuniaoBadge");
     if (badge) badge.textContent = "Reunião: " + (idReuniao || "-");
 
+    const panelEscolha = qs("panelEscolha");
+    const pubComite = qs("pubComite");
+    const pubReuniao = qs("pubReuniao");
+
+    const COMITES = [
+      "CBH Lago de Palmas",
+      "CBH Rio Palma",
+      "CBH Manoel Alves",
+      "CBH Lontra e Corda",
+      "CBH S. Teresa e S. Antônio",
+      "CBH Coco e Caiapó",
+    ];
+
+    function fillSelect(selectEl, items, placeholder) {
+      if (!selectEl) return;
+      selectEl.innerHTML = "";
+      const opt0 = document.createElement("option");
+      opt0.value = "";
+      opt0.textContent = placeholder || "Selecione...";
+      selectEl.appendChild(opt0);
+      (items || []).forEach((x) => {
+        const o = document.createElement("option");
+        o.value = x.value;
+        o.textContent = x.label;
+        selectEl.appendChild(o);
+      });
+    }
+
+    async function carregarReunioesPublicas() {
+      const comite = (pubComite?.value || "").trim();
+      if (!comite) {
+        fillSelect(pubReuniao, [], "Selecione a reunião...");
+        return;
+      }
+      const r = await api({ acao: "listarReunioesPublicas", comite });
+      const items = (r.reunioes || []).map((x) => ({
+        value: x.idReuniao,
+        label: `${fmtDate(x.data)} - ${x.titulo || "(sem título)"}`,
+      }));
+      fillSelect(pubReuniao, items, items.length ? "Selecione a reunião..." : "Nenhuma reunião agendada");
+    }
+
     if (!idReuniao) {
-      setNotice("err", "Link inválido: parâmetro 'id' ausente.");
-      const btnValidar = qs("btnValidar");
-      if (btnValidar) btnValidar.disabled = true;
-      return;
+      if (panelEscolha) panelEscolha.classList.remove("hidden");
+      fillSelect(pubComite, COMITES.map((c) => ({ value: c, label: c })), "Selecione o comitê...");
+      await carregarReunioesPublicas();
+      pubComite?.addEventListener("change", async () => {
+        try {
+          await carregarReunioesPublicas();
+        } catch (e) {
+          setNotice("err", e.message);
+        }
+      });
+      pubReuniao?.addEventListener("change", () => {
+        idReuniao = (pubReuniao?.value || "").trim();
+        if (badge) badge.textContent = "Reunião: " + (idReuniao || "-");
+      });
     }
 
     const cpfEl = qs("cpf");
@@ -98,6 +150,11 @@
       setNotice(null, "");
       if (panelNovo) panelNovo.classList.add("hidden");
       if (panelCodigo) panelCodigo.classList.add("hidden");
+
+      if (!idReuniao) {
+        setNotice("err", "Selecione o comitê e a reunião.");
+        return;
+      }
 
       const cpf = normalizeCpf(cpfEl ? cpfEl.value : "");
       if (cpf.length !== 11) {
@@ -207,6 +264,8 @@
     const btnToggleNova = qs("btnToggleNova");
     const formNova = qs("formNova");
     const btnCriarReuniao = qs("btnCriarReuniao");
+    const nrComiteWrap = qs("nrComiteWrap");
+    const nrComite = qs("nrComite");
 
     const listaReunioes = qs("listaReunioes");
 
@@ -252,6 +311,21 @@
         o.value = c;
         o.textContent = c;
         cadComite.appendChild(o);
+      });
+    }
+
+    function fillComitesForNovaReuniao() {
+      if (!nrComite) return;
+      nrComite.innerHTML = "";
+      const opt0 = document.createElement("option");
+      opt0.value = "";
+      opt0.textContent = "Selecione...";
+      nrComite.appendChild(opt0);
+      COMITES.forEach((c) => {
+        const o = document.createElement("option");
+        o.value = c;
+        o.textContent = c;
+        nrComite.appendChild(o);
       });
     }
 
@@ -398,6 +472,21 @@
 
       panelCadastro?.classList.add("hidden");
       panelPresidente.classList.remove("hidden");
+
+      if (session.perfil === "Admin" || session.perfil === "Presidente") {
+        btnToggleNova?.classList.remove("hidden");
+      } else {
+        btnToggleNova?.classList.add("hidden");
+        formNova?.classList.add("hidden");
+      }
+
+      if (session.perfil === "Admin") {
+        if (nrComiteWrap) nrComiteWrap.style.display = "";
+        fillComitesForNovaReuniao();
+      } else {
+        if (nrComiteWrap) nrComiteWrap.style.display = "none";
+      }
+
       await carregarReunioes();
 
       // Admin/Presidente pode aprovar pendentes
@@ -524,6 +613,11 @@
       setNotice(null, "");
       if (!session) return;
 
+      if (session.perfil !== "Admin" && session.perfil !== "Presidente") {
+        setNotice("err", "Sem permissão.");
+        return;
+      }
+
       const titulo = (qs("nrTitulo")?.value || "").trim();
       const data = (qs("nrData")?.value || "").trim();
       const tipo = (qs("nrTipo")?.value || "").trim();
@@ -534,7 +628,8 @@
 
       btnCriarReuniao.disabled = true;
       try {
-        const r = await api({ acao: "criarReuniao", idToken, titulo, data, tipo, local, idPresidente: session.idUsuario });
+        const comite = session.perfil === "Admin" ? (nrComite?.value || "").trim() : session.comite;
+        const r = await api({ acao: "criarReuniao", idToken, titulo, data, tipo, local, comite, idPresidente: session.idUsuario });
         if (r.sucesso) {
           setNotice("ok", "Reunião criada.");
           formNova.classList.add("hidden");
