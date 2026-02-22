@@ -283,6 +283,17 @@ hr {
   filter: brightness(0.97);
 }
 
+.meeting-headline {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.meeting-headline .small {
+  text-align: right;
+}
+
 .news-mini-card {
   border: 1px solid var(--border);
   border-radius: 12px;
