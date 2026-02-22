@@ -192,6 +192,16 @@
 
     const panelAguardando = qs("panelAguardando");
     const panelPresidente = qs("panelPresidente");
+    const panelCadastro = qs("panelCadastro");
+    const cadComite = qs("cadComite");
+    const cadTelefone = qs("cadTelefone");
+    const cadOrgao = qs("cadOrgao");
+    const btnSalvarCadastro = qs("btnSalvarCadastro");
+
+    const panelAprovacoes = qs("panelAprovacoes");
+    const aprovInfo = qs("aprovInfo");
+    const btnCarregarPendentes = qs("btnCarregarPendentes");
+    const listaPendentes = qs("listaPendentes");
     const btnReload = qs("btnReload");
 
     const btnToggleNova = qs("btnToggleNova");
@@ -220,6 +230,30 @@
     let reuniaoAtual = null;
     let editor = null;
     let idToken = null;
+
+    const COMITES = [
+      "CBH Lago de Palmas",
+      "CBH Rio Palma",
+      "CBH Manoel Alves",
+      "CBH Lontra e Corda",
+      "CBH S. Teresa e S. Antônio",
+      "CBH Coco e Caiapó",
+    ];
+
+    function fillComites() {
+      if (!cadComite) return;
+      cadComite.innerHTML = "";
+      const opt0 = document.createElement("option");
+      opt0.value = "";
+      opt0.textContent = "Selecione...";
+      cadComite.appendChild(opt0);
+      COMITES.forEach((c) => {
+        const o = document.createElement("option");
+        o.value = c;
+        o.textContent = c;
+        cadComite.appendChild(o);
+      });
+    }
 
     function setAuthUI(logado) {
       if (logado) {
@@ -332,6 +366,8 @@
       const r = await api({ acao: "login", idToken, email, uid, nome: user.displayName || "" });
       if (!r.autorizado) {
         panelPresidente.classList.add("hidden");
+        panelCadastro?.classList.add("hidden");
+        panelAprovacoes?.classList.add("hidden");
         panelAguardando.classList.remove("hidden");
         setNotice("err", r.mensagem || "Acesso não autorizado.");
         session = null;
@@ -349,8 +385,131 @@
       userLine.textContent = `${session.nome || ""} • ${session.email || ""} • ${session.perfil || ""}`;
 
       panelAguardando.classList.add("hidden");
+
+      // Primeiro acesso: se não tiver comitê, obriga cadastro complementar
+      if (!session.comite) {
+        fillComites();
+        panelPresidente.classList.add("hidden");
+        panelCadastro?.classList.remove("hidden");
+        panelAprovacoes?.classList.add("hidden");
+        setNotice("err", "Complete seu cadastro para solicitar aprovação.");
+        return;
+      }
+
+      panelCadastro?.classList.add("hidden");
       panelPresidente.classList.remove("hidden");
       await carregarReunioes();
+
+      // Admin/Presidente pode aprovar pendentes
+      if (session.perfil === "Admin" || session.perfil === "Presidente") {
+        panelAprovacoes?.classList.remove("hidden");
+        await carregarPendentes();
+      } else {
+        panelAprovacoes?.classList.add("hidden");
+      }
+    }
+
+    async function salvarCadastro() {
+      if (!session) return;
+      setNotice(null, "");
+      btnSalvarCadastro.disabled = true;
+      try {
+        const comite = (cadComite?.value || "").trim();
+        const telefone = (cadTelefone?.value || "").trim();
+        const orgao = (cadOrgao?.value || "").trim();
+
+        const r = await api({
+          acao: "completarCadastro",
+          idToken,
+          idUsuario: session.idUsuario,
+          comite,
+          telefone,
+          orgao,
+        });
+        if (r.status === "ok") {
+          panelCadastro?.classList.add("hidden");
+          panelPresidente.classList.add("hidden");
+          panelAprovacoes?.classList.add("hidden");
+          panelAguardando.classList.remove("hidden");
+          setNotice("err", "Cadastro enviado. Aguardando aprovação.");
+        }
+      } catch (e) {
+        setNotice("err", e.message);
+      } finally {
+        btnSalvarCadastro.disabled = false;
+      }
+    }
+
+    function renderPendentes(items) {
+      if (!listaPendentes) return;
+      listaPendentes.innerHTML = "";
+      if (!items.length) {
+        const div = document.createElement("div");
+        div.className = "notice";
+        div.textContent = "Nenhum pendente.";
+        listaPendentes.appendChild(div);
+        return;
+      }
+
+      items.forEach((u) => {
+        const item = document.createElement("div");
+        item.className = "item";
+
+        const left = document.createElement("div");
+        const h = document.createElement("h3");
+        h.textContent = u.nome || u.email;
+        const p = document.createElement("p");
+        p.textContent = `${u.email || ""} • ${u.comite || ""}`;
+        left.appendChild(h);
+        left.appendChild(p);
+
+        const right = document.createElement("div");
+        right.className = "row";
+
+        const sel = document.createElement("select");
+        ["Membro", "Presidente"].forEach((x) => {
+          const o = document.createElement("option");
+          o.value = x;
+          o.textContent = x;
+          sel.appendChild(o);
+        });
+
+        const btn = document.createElement("button");
+        btn.className = "primary";
+        btn.textContent = "Aprovar";
+        btn.addEventListener("click", async () => {
+          btn.disabled = true;
+          try {
+            await api({ acao: "aprovarUsuario", idToken, idUsuario: u.idUsuario, novoPerfil: sel.value });
+            await carregarPendentes();
+          } catch (e) {
+            setNotice("err", e.message);
+          } finally {
+            btn.disabled = false;
+          }
+        });
+
+        right.appendChild(sel);
+        right.appendChild(btn);
+
+        item.appendChild(left);
+        item.appendChild(right);
+        listaPendentes.appendChild(item);
+      });
+    }
+
+    async function carregarPendentes() {
+      if (!session) return;
+      try {
+        const r = await api({ acao: "listarPendentes", idToken });
+        if (aprovInfo) {
+          if (r.perfilRequester === "Admin") aprovInfo.textContent = "Você vê pendentes de todos os comitês.";
+          else aprovInfo.textContent = "Você vê pendentes do comitê: " + (r.comiteRequester || "-");
+        }
+        renderPendentes(r.pendentes || []);
+      } catch (e) {
+        setNotice("err", e.message);
+      }
     }
 
     async function carregarReunioes() {
@@ -452,6 +611,9 @@
 
     btnReload?.addEventListener("click", carregarReunioes);
 
+    btnSalvarCadastro?.addEventListener("click", salvarCadastro);
+    btnCarregarPendentes?.addEventListener("click", carregarPendentes);
+
     btnToggleNova?.addEventListener("click", () => formNova.classList.toggle("hidden"));
     btnCriarReuniao?.addEventListener("click", criarReuniao);
 
@@ -475,6 +637,8 @@
         userLine.textContent = "-";
         panelAguardando.classList.add("hidden");
         panelPresidente.classList.add("hidden");
+        panelCadastro?.classList.add("hidden");
+        panelAprovacoes?.classList.add("hidden");
         panelReuniao.classList.add("hidden");
         reunioes = [];
         reuniaoAtual = null;
