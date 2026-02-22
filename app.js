@@ -501,6 +501,25 @@
       };
     }
 
+    function isLikelyDirectImageUrl(url) {
+      const raw = (url || "").trim();
+      if (!raw) return true;
+      try {
+        const u = new URL(raw);
+        if (u.protocol !== "http:" && u.protocol !== "https:") return false;
+        const full = raw.toLowerCase();
+        const path = (u.pathname || "").toLowerCase();
+        if (/\.(png|jpe?g|webp|gif|svg)(\?|$)/i.test(full)) return true;
+        if (u.hostname.includes("googleusercontent.com")) return true;
+        if (u.hostname.includes("raw.githubusercontent.com")) return true;
+        if (u.hostname.includes("imgur.com") && !path.startsWith("/a/")) return true;
+        if (u.hostname.includes("canva.com")) return false;
+        return false;
+      } catch (e) {
+        return false;
+      }
+    }
+
     function setPortalTab(tab) {
       const isConfig = tab === "config";
       const isNoticias = tab === "noticias";
@@ -741,9 +760,14 @@
         setNotice("err", "Somente Administrador pode salvar Configurações do Portal.");
         return;
       }
+      const cfg = collectPortalForm();
+      if (!isLikelyDirectImageUrl(cfg.homeBannerImagemUrl || "")) {
+        setNotice("err", "URL da imagem do banner precisa ser link direto da imagem (.png/.jpg/.webp). Links de página (ex.: Canva /design/.../view) não funcionam como background.");
+        return;
+      }
       btnSalvarPortalConfig.disabled = true;
       try {
-        await api({ acao: "salvarPortalConfig", idToken, config: collectPortalForm() });
+        await api({ acao: "salvarPortalConfig", idToken, config: cfg });
         setNotice("ok", "Configurações do portal salvas.");
         await carregarPortalPublico();
       } catch (e) {
@@ -802,11 +826,13 @@
       panelPortalGestao?.classList.remove("hidden");
       await garantirEditorNoticia();
       fillComitesNoticia();
-      if (session.perfil === "Presidente") {
-        notComite.value = session.comite || "";
-        notComite.disabled = true;
-      } else {
-        notComite.disabled = false;
+      if (notComite) {
+        if (session.perfil === "Presidente") {
+          notComite.value = session.comite || "";
+          notComite.disabled = true;
+        } else {
+          notComite.disabled = false;
+        }
       }
 
       if (session.perfil === "Admin") {

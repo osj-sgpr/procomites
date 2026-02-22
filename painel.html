@@ -216,59 +216,6 @@
               <button id="btnNovaNoticia">Abrir Notícia Editor</button>
             </div>
 
-            <div id="formNoticia" class="hidden" style="margin-top: 10px;">
-              <div class="row">
-                <div class="field">
-                  <label>Título</label>
-                  <input id="notTitulo" placeholder="Título da notícia" />
-                </div>
-                <div class="field">
-                  <label>Comitê</label>
-                  <select id="notComite"></select>
-                </div>
-              </div>
-              <div class="row" style="margin-top: 10px;">
-                <div class="field">
-                  <label>Resumo</label>
-                  <textarea id="notResumo" rows="3" placeholder="Resumo para listagens"></textarea>
-                </div>
-              </div>
-              <div class="row" style="margin-top: 10px;">
-                <div class="field">
-                  <label>Imagem de capa (URL)</label>
-                  <input id="notImagem" placeholder="https://..." />
-                </div>
-                <div class="field">
-                  <label>Data de publicação</label>
-                  <input id="notData" type="date" />
-                </div>
-              </div>
-              <div class="row" style="margin-top: 10px;">
-                <div class="field">
-                  <label>Status</label>
-                  <select id="notStatus">
-                    <option value="Rascunho">Rascunho</option>
-                    <option value="Publicado">Publicado</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label>Destaque na Home</label>
-                  <select id="notDestaqueHome">
-                    <option value="NÃO">Não</option>
-                    <option value="SIM">Sim</option>
-                  </select>
-                </div>
-              </div>
-              <div style="margin-top: 10px;">
-                <label>Conteúdo da notícia</label>
-                <div id="editorNoticia" class="card" style="min-height: 220px; padding: 10px;"></div>
-              </div>
-              <div class="row" style="margin-top: 10px; justify-content: flex-end;">
-                <button id="btnSalvarNoticia" class="primary">Salvar notícia</button>
-                <button id="btnCancelarNoticia">Cancelar</button>
-              </div>
-            </div>
-
             <div id="listaNoticiasGestao" class="list" style="margin-top: 10px;"></div>
           </div>
         </div>
@@ -391,8 +338,6 @@
 
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-
-  <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
-  <script src="./app.js?v=20260222i"></script>
+  <script src="./app.js?v=20260222j"></script>
 </body>
 </html>
