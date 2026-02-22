@@ -176,13 +176,16 @@
       try {
         const r = await api({ acao: "validarPresenca", idReuniao, cpf });
         if (r.status === "ja_presente") {
-          setNotice("ok", r.mensagem || "Presença já registrada.");
-          showCodigo(r.codigo);
+          setNotice("ok", r.mensagem || "Participação já validada.");
+          if (r.codigo) showCodigo(r.codigo);
+          return;
+        }
+        if (r.status === "ja_confirmado") {
+          setNotice("ok", r.mensagem || "Participação já confirmada.");
           return;
         }
         if (r.status === "ok") {
-          setNotice("ok", r.mensagem || "Presença registrada.");
-          showCodigo(r.codigo);
+          setNotice("ok", r.mensagem || "Participação confirmada.");
           return;
         }
         if (r.status === "novo") {
@@ -227,10 +230,20 @@
           perfil,
           precisaDiaria,
         });
-        if (r.status === "ok") {
-          setNotice("ok", "Presença registrada.");
+        if (r.status === "ja_presente") {
+          setNotice("ok", r.mensagem || "Participação já validada.");
           if (panelNovo) panelNovo.classList.add("hidden");
-          showCodigo(r.codigo);
+          if (r.codigo) showCodigo(r.codigo);
+          return;
+        }
+        if (r.status === "ja_confirmado") {
+          setNotice("ok", r.mensagem || "Participação já confirmada.");
+          if (panelNovo) panelNovo.classList.add("hidden");
+          return;
+        }
+        if (r.status === "ok") {
+          setNotice("ok", r.mensagem || "Participação confirmada.");
+          if (panelNovo) panelNovo.classList.add("hidden");
           return;
         }
         setNotice("err", r.mensagem || "Erro ao salvar.");
@@ -412,7 +425,7 @@
 
           const btnValidar = document.createElement("button");
           btnValidar.className = "primary";
-          btnValidar.textContent = "Validar presença";
+          btnValidar.textContent = "Confirmar participação";
           btnValidar.addEventListener("click", () => {
             window.location.href = `./validar-presenca.html?id=${encodeURIComponent(r.idReuniao || "")}`;
           });
@@ -523,7 +536,6 @@
     async function atualizarListas() {
       if (!reuniaoAtual) return;
       clearTables();
-      btnAtualizarListas.disabled = true;
       try {
         const [c, p] = await Promise.all([
           api({ acao: "listarConfirmacoes", idReuniao: reuniaoAtual.idReuniao }),
@@ -538,8 +550,17 @@
         });
       } catch (e) {
         setNotice("err", e.message);
-      } finally {
-        btnAtualizarListas.disabled = false;
+      }
+    }
+
+    function ativarAbaListas(aba) {
+      if (aba === "confirmar") {
+        btnPendentes?.classList.add("primary");
+        btnConfirmar?.classList.remove("primary");
+        panelValidarParticipacao?.classList.add("hidden");
+      } else {
+        btnConfirmar?.classList.add("primary");
+        btnPendentes?.classList.remove("primary");
       }
     }
 
@@ -550,6 +571,7 @@
       linkPublico.textContent = r.linkConfirmacao || "";
       if (reuniaoStatus) reuniaoStatus.textContent = `Status: ${r.status || "-"}`;
       clearTables();
+      ativarAbaListas("confirmar");
       panelAta.classList.add("hidden");
       panelValidarParticipacao?.classList.add("hidden");
       await atualizarListas();
@@ -590,7 +612,9 @@
     }
 
     async function atualizarPendentes() {
+      ativarAbaListas("confirmar");
       await atualizarListas();
+      panelValidarParticipacao?.classList.add("hidden");
       qs("tblConfirmados")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
@@ -600,6 +624,7 @@
         setNotice("err", "Sem permissão.");
         return;
       }
+      ativarAbaListas("validar");
       panelValidarParticipacao?.classList.remove("hidden");
       await carregarValidacoes();
       panelValidarParticipacao?.scrollIntoView({ behavior: "smooth", block: "start" });
