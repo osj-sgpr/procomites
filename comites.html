@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ProComitês - Comitês do Tocantins</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="./styles.css?v=20260222e" />
+</head>
+<body data-page="comites">
+  <div class="container site-shell">
+    <header class="site-header">
+      <div class="brand">
+        <h1>ProComitês</h1>
+        <p>Portal dos Comitês de Bacias Hidrográficas do Tocantins</p>
+      </div>
+      <nav class="portal-nav">
+        <a class="portal-nav-link" href="./home.html">Home</a>
+        <a class="portal-nav-link" href="./noticias.html">Notícias</a>
+        <a class="portal-nav-link active" href="./comites.html">Comitês do Tocantins</a>
+        <a class="portal-nav-link" href="./fale-conosco.html">Fale Conosco</a>
+        <a class="portal-nav-link" href="./index.html">Painel</a>
+      </nav>
+    </header>
+
+    <div id="publicNotice" class="notice hidden"></div>
+
+    <section class="card" style="margin-bottom: 14px;">
+      <div style="font-weight: 700;">Comitês do Tocantins</div>
+      <div class="small">Acompanhamento de reuniões públicas por comitê.</div>
+    </section>
+
+    <section id="comitesGrid" class="comites-grid"></section>
+  </div>
+
+  <script>
+    window.APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPGdYJ6kYEPPDCZUaoCqyxoDvtlwQOTunvvkPP2RHjMg0TzvflUQdfMcGxE-hSTgT3/exec";
+  </script>
+  <script src="./portal-public.js?v=20260222e"></script>
+</body>
+</html>

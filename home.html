@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ProComitês - Home</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="./styles.css?v=20260222e" />
+</head>
+<body data-page="home">
+  <div class="container site-shell">
+    <header class="site-header">
+      <div class="brand">
+        <h1>ProComitês</h1>
+        <p>Portal dos Comitês de Bacias Hidrográficas do Tocantins</p>
+      </div>
+      <nav class="portal-nav">
+        <a class="portal-nav-link active" href="./home.html">Home</a>
+        <a class="portal-nav-link" href="./noticias.html">Notícias</a>
+        <a class="portal-nav-link" href="./comites.html">Comitês do Tocantins</a>
+        <a class="portal-nav-link" href="./fale-conosco.html">Fale Conosco</a>
+        <a class="portal-nav-link" href="./index.html">Painel</a>
+      </nav>
+    </header>
+
+    <div id="publicNotice" class="notice hidden"></div>
+
+    <section class="card portal-public">
+      <div id="publicHero" class="public-hero">
+        <div class="public-hero-overlay">
+          <div class="small" style="color: #d3eef5;">Portal Oficial</div>
+          <h2 id="heroTitulo">Comitês de Bacias Hidrográficas do Estado do Tocantins</h2>
+          <p id="heroSubtitulo">Acompanhe reuniões, publicações e notícias oficiais dos comitês.</p>
+          <a id="heroBotao" class="hero-link" href="#" target="_blank" rel="noopener">Saiba mais</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid" style="margin-top: 14px; grid-template-columns: 1.2fr .8fr;">
+      <article class="card">
+        <div style="font-weight: 700;">Últimas notícias</div>
+        <div class="small">As 3 notícias mais recentes publicadas no portal.</div>
+        <div id="publicUltimasNoticias" class="list" style="margin-top: 10px;"></div>
+      </article>
+
+      <article class="card">
+        <div id="publicContatoTitulo" style="font-weight: 700;">Fale Conosco</div>
+        <div id="publicContatoTexto" class="small" style="margin-top: 6px;"></div>
+        <div class="contact-lines" style="margin-top: 10px;">
+          <div><strong>Email:</strong> <span id="publicContatoEmail">-</span></div>
+          <div><strong>Telefone:</strong> <span id="publicContatoTelefone">-</span></div>
+          <div><strong>Endereço:</strong> <span id="publicContatoEndereco">-</span></div>
+        </div>
+      </article>
+    </section>
+  </div>
+
+  <script>
+    window.APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPGdYJ6kYEPPDCZUaoCqyxoDvtlwQOTunvvkPP2RHjMg0TzvflUQdfMcGxE-hSTgT3/exec";
+  </script>
+  <script src="./portal-public.js?v=20260222e"></script>
+</body>
+</html>
