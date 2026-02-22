@@ -204,8 +204,8 @@ hr {
 
 .public-hero {
   border-radius: 14px;
-  min-height: 190px;
-  padding: 20px;
+  min-height: 340px;
+  padding: 24px;
   display: flex;
   align-items: flex-end;
   background: linear-gradient(120deg, #0a3f5d, #0f7f87);
@@ -565,8 +565,8 @@ hr {
 
 @media (max-width: 900px) {
   .public-hero {
-    min-height: 160px;
-    padding: 16px;
+    min-height: 250px;
+    padding: 18px;
   }
 
   .noticia-titulo {
@@ -584,5 +584,18 @@ hr {
 
   .news-editor-layout {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1200px) {
+  .public-hero {
+    min-height: 300px;
+  }
+}
+
+@media (max-width: 640px) {
+  .public-hero {
+    min-height: 210px;
+    padding: 14px;
   }
 }
