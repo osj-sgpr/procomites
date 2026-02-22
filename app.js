@@ -14,23 +14,46 @@
     el.classList.add(kind === "ok" ? "ok" : kind === "err" ? "err" : "");
   }
 
-  async function api(payload) {
-    const url = window.APPS_SCRIPT_URL || (typeof APPS_SCRIPT_URL !== "undefined" ? APPS_SCRIPT_URL : "");
-    if (!url) throw new Error("APPS_SCRIPT_URL não configurada. Verifique se config.js foi publicado no GitHub Pages.");
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload),
+  function api(payload) {
+    const base = window.APPS_SCRIPT_URL || (typeof APPS_SCRIPT_URL !== "undefined" ? APPS_SCRIPT_URL : "");
+    if (!base) return Promise.reject(new Error("APPS_SCRIPT_URL não configurada."));
+
+    return new Promise((resolve, reject) => {
+      const cb = "__cb_" + Math.random().toString(36).slice(2);
+      const timeoutMs = 25000;
+
+      const clean = () => {
+        try { delete window[cb]; } catch (e) { window[cb] = undefined; }
+        if (script && script.parentNode) script.parentNode.removeChild(script);
+        if (timer) clearTimeout(timer);
+      };
+
+      window[cb] = (data) => {
+        clean();
+        if (data && data.erro) return reject(new Error(data.erro));
+        resolve(data);
+      };
+
+      const u = new URL(base);
+      u.searchParams.set("acao", payload.acao || "");
+      u.searchParams.set("callback", cb);
+      u.searchParams.set("payload", JSON.stringify(payload));
+      u.searchParams.set("_ts", String(Date.now()));
+
+      const script = document.createElement("script");
+      script.src = u.toString();
+      script.onerror = () => {
+        clean();
+        reject(new Error("Falha ao chamar API (JSONP)."));
+      };
+
+      const timer = setTimeout(() => {
+        clean();
+        reject(new Error("Timeout ao chamar API."));
+      }, timeoutMs);
+
+      document.head.appendChild(script);
     });
-    const text = await res.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (e) {
-      throw new Error("Resposta inválida da API: " + text);
-    }
-    if (data && data.erro) throw new Error(data.erro);
-    return data;
   }
 
   function getUrlParam(name) {
