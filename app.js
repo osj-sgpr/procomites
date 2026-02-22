@@ -195,6 +195,8 @@
       const email = (qs("email")?.value || "").trim();
       const telefone = (qs("telefone")?.value || "").trim();
       const orgao = (qs("orgao")?.value || "").trim();
+      const cidade = (qs("cidade")?.value || "").trim();
+      const perfil = (qs("perfil")?.value || "Membro").trim();
       const precisaDiaria = (qs("precisaDiaria")?.value || "NÃO").trim();
 
       if (cpf.length !== 11) return setNotice("err", "CPF inválido.");
@@ -211,6 +213,8 @@
           email,
           telefone,
           orgao,
+          cidade,
+          perfil,
           precisaDiaria,
         });
         if (r.status === "ok") {
@@ -273,7 +277,11 @@
     const linkPublico = qs("linkPublico");
 
     const btnCopiarLink = qs("btnCopiarLink");
-    const btnAtualizarListas = qs("btnAtualizarListas");
+    const reuniaoStatus = qs("reuniaoStatus");
+    const btnAbrirReuniao = qs("btnAbrirReuniao");
+    const btnFecharReuniao = qs("btnFecharReuniao");
+    const btnPendentes = qs("btnPendentes");
+    const btnConfirmar = qs("btnConfirmar");
     const btnRelatorio = qs("btnRelatorio");
     const btnAta = qs("btnAta");
 
@@ -431,9 +439,54 @@
       qs("reuniaoSelecionada").textContent = `${r.titulo || ""} (${fmtDate(r.data)})`;
       panelReuniao.classList.remove("hidden");
       linkPublico.textContent = r.linkConfirmacao || "";
+      if (reuniaoStatus) reuniaoStatus.textContent = `Status: ${r.status || "-"}`;
       clearTables();
       panelAta.classList.add("hidden");
       await atualizarListas();
+    }
+
+    async function abrirReuniao() {
+      if (!reuniaoAtual) return;
+      if (!session || (session.perfil !== "Admin" && session.perfil !== "Presidente")) return setNotice("err", "Sem permissão.");
+      btnAbrirReuniao.disabled = true;
+      try {
+        const r = await api({ acao: "abrirReuniao", idToken, idReuniao: reuniaoAtual.idReuniao });
+        reuniaoAtual.status = r.status || "Aberta";
+        if (reuniaoStatus) reuniaoStatus.textContent = `Status: ${reuniaoAtual.status}`;
+        setNotice("ok", "Reunião aberta.");
+        await carregarReunioes();
+      } catch (e) {
+        setNotice("err", e.message);
+      } finally {
+        btnAbrirReuniao.disabled = false;
+      }
+    }
+
+    async function fecharReuniao() {
+      if (!reuniaoAtual) return;
+      if (!session || (session.perfil !== "Admin" && session.perfil !== "Presidente")) return setNotice("err", "Sem permissão.");
+      btnFecharReuniao.disabled = true;
+      try {
+        const r = await api({ acao: "fecharReuniao", idToken, idReuniao: reuniaoAtual.idReuniao });
+        reuniaoAtual.status = r.status || "Encerrada";
+        if (reuniaoStatus) reuniaoStatus.textContent = `Status: ${reuniaoAtual.status}`;
+        setNotice("ok", "Reunião fechada.");
+        await carregarReunioes();
+      } catch (e) {
+        setNotice("err", e.message);
+      } finally {
+        btnFecharReuniao.disabled = false;
+      }
+    }
+
+    async function atualizarPendentes() {
+      await atualizarListas();
+      qs("tblConfirmados")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    async function confirmarParticipacao() {
+      await atualizarListas();
+      qs("tblPresentes")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     async function doLogin(user) {
@@ -778,6 +831,10 @@
         setNotice("err", "Selecione o PDF assinado.");
         return;
       }
+      if (file.size > 10 * 1024 * 1024) {
+        setNotice("err", "Arquivo muito grande. Limite: 10 MB.");
+        return;
+      }
       if (!/pdf$/i.test(file.type) && !/\.pdf$/i.test(file.name || "")) {
         setNotice("err", "Arquivo inválido. Envie um PDF.");
         return;
@@ -793,8 +850,8 @@
           setUploadStatus("Lendo arquivo... " + pct + "%");
         });
 
-        // chunking
-        const chunkSize = 80 * 1024; // 80k chars
+        // chunking (JSONP tem limite de URL; manter pequeno para evitar 414/URI Too Long)
+        const chunkSize = 8 * 1024; // 8k chars
         const totalChunks = Math.max(1, Math.ceil(b64.length / chunkSize));
 
         setUploadStatus("Iniciando upload...");
@@ -871,8 +928,11 @@
       setNotice("ok", "Link copiado.");
     });
 
-    btnAtualizarListas?.addEventListener("click", atualizarListas);
     btnRelatorio?.addEventListener("click", gerarRelatorio);
+    btnAbrirReuniao?.addEventListener("click", abrirReuniao);
+    btnFecharReuniao?.addEventListener("click", fecharReuniao);
+    btnPendentes?.addEventListener("click", atualizarPendentes);
+    btnConfirmar?.addEventListener("click", confirmarParticipacao);
 
     btnAta?.addEventListener("click", abrirAta);
     btnCancelarAta?.addEventListener("click", () => panelAta.classList.add("hidden"));
