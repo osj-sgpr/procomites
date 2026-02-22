@@ -157,8 +157,8 @@
           <div class="row" style="justify-content: space-between; align-items: center;">
             <div style="font-weight: 600;">Listas</div>
             <div class="row">
-              <button id="btnPendentes">Atualizar pendentes</button>
-              <button id="btnConfirmar">Confirmar participação</button>
+              <button id="btnPendentes">Confirmar participação</button>
+              <button id="btnConfirmar" class="primary">Validar participação</button>
             </div>
           </div>
 
@@ -176,6 +176,18 @@
               <thead><tr><th>Nome</th><th>CPF</th><th>Código</th><th>Horário</th></tr></thead>
               <tbody></tbody>
             </table>
+          </div>
+
+          <div id="panelValidarParticipacao" class="hidden" style="margin-top: 14px;">
+            <hr />
+            <div class="row" style="justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-weight: 600;">Validação manual de participação</div>
+                <div class="small">Aprove pré-confirmados (Secretário/Presidente).</div>
+              </div>
+              <button id="btnRecarregarValidacao">Atualizar</button>
+            </div>
+            <div id="listaValidacao" class="list" style="margin-top: 12px;"></div>
           </div>
 
           <hr />
