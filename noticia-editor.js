@@ -269,118 +269,52 @@
   function ensureEditor() {
     return new Promise(function (resolve, reject) {
       if (state.editor) return resolve(state.editor);
-      var ClassicEditorCtor = (window.CKEDITOR && window.CKEDITOR.ClassicEditor) || window.ClassicEditor;
-      if (!ClassicEditorCtor) {
-        return reject(new Error("Editor rico indisponível no navegador. Verifique o arquivo local ./vendor/ckeditor5/ckeditor-super-build.js."));
+      if (!window.Quill) {
+        return reject(new Error("Editor rico indisponível no navegador. Verifique o arquivo local ./vendor/quill/quill.js."));
       }
 
-      ClassicEditorCtor
-        .create(qs("editorConteudo"), {
-          removePlugins: [
-            "CKBox",
-            "CKFinder",
-            "CKFinderUploadAdapter",
-            "EasyImage",
-            "RealTimeCollaborativeComments",
-            "RealTimeCollaborativeTrackChanges",
-            "RealTimeCollaborativeRevisionHistory",
-            "PresenceList",
-            "Comments",
-            "TrackChanges",
-            "TrackChangesData",
-            "RevisionHistory",
-            "Pagination",
-            "WProofreader",
-            "MathType",
-            "DocumentOutline",
-            "MediaEmbed",
-            "WordCount",
-            "TableToolbar",
-            "TableCaption",
-            "ImageUpload",
-            "ImageCaption",
-            "LinkImage",
-            "AutoLink",
-            "Autoformat",
-            "ImageInsert",
-            "Image",
-            "ImageStyle",
-            "ImageToolbar",
-            "PictureEditing",
-            "CloudServices",
-            "ExportPdf",
-            "ExportWord",
-            "ImportWord",
-            "Markdown",
-            "RestrictedEditing"
-          ],
-          toolbar: {
-            items: [
-              "undo", "redo", "|",
-              "heading", "|",
-              "bold", "italic", "underline", "strikethrough", "subscript", "superscript", "|",
-              "alignment", "|",
-              "fontColor", "fontBackgroundColor", "fontSize", "fontFamily", "|",
-              "highlight", "|",
-              "bulletedList", "numberedList", "outdent", "indent", "|",
-              "blockQuote", "codeBlock", "|",
-              "link", "insertTable", "|",
-              "horizontalLine", "pageBreak", "|",
-              "removeFormat"
-            ]
-          },
-          heading: {
-            options: [
-              { model: 'paragraph', title: 'Parágrafo', class: 'ck-heading_paragraph' },
-              { model: 'heading1', view: 'h1', title: 'Título 1', class: 'ck-heading_heading1' },
-              { model: 'heading2', view: 'h2', title: 'Título 2', class: 'ck-heading_heading2' },
-              { model: 'heading3', view: 'h3', title: 'Título 3', class: 'ck-heading_heading3' },
-              { model: 'heading4', view: 'h4', title: 'Título 4', class: 'ck-heading_heading4' },
-              { model: 'heading5', view: 'h5', title: 'Título 5', class: 'ck-heading_heading5' },
-              { model: 'heading6', view: 'h6', title: 'Título 6', class: 'ck-heading_heading6' }
-            ]
-          },
-          fontSize: {
-            options: [
-              'default',
-              8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-              21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-              32, 34, 36, 38, 40, 42, 44, 46, 48, 50,
-              52, 54, 56, 58, 60, 64, 68, 72, 76, 80
-            ]
-          },
-          fontFamily: {
-            options: [
-              'default',
-              'Arial, Helvetica, sans-serif',
-              'Georgia, serif',
-              'Times New Roman, Times, serif',
-              'Courier New, Courier, monospace',
-              'Verdana, Geneva, sans-serif',
-              'Trebuchet MS, Helvetica, sans-serif',
-              'Tahoma, Geneva, sans-serif'
-            ]
-          },
-          table: {
-            contentToolbar: [
-              "tableColumn", "tableRow", "mergeTableCells",
-              "tableProperties", "tableCellProperties"
-            ]
-          },
-          link: {
-            addTargetToExternalLinks: true,
-            defaultProtocol: "https://"
-          }
-        })
-        .then(function (rawEditor) {
-          state.editor = createCkEditorAdapter_(rawEditor);
-          bindNewsToolbarCommands_(state.editor);
-          state.editor.setData("<p>Digite a notícia...</p>");
-          resolve(state.editor);
-        })
-        .catch(function (err) {
-          reject(new Error("Não foi possível iniciar o editor rico (CKEditor). " + (err && err.message ? err.message : "")));
-        });
+      var quill = new window.Quill(qs("editorConteudo"), {
+        theme: 'snow',
+        modules: {
+          toolbar: [
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            ['blockquote', 'code-block'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            [{ 'script': 'sub'}, { 'script': 'super' }],
+            [{ 'indent': '-1'}, { 'indent': '+1' }],
+            [{ 'direction': 'rtl' }],
+            [{ 'size': ['small', false, 'large', 'huge'] }],
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'font': [] }],
+            [{ 'align': [] }],
+            ['link', 'image'],
+            ['clean']
+          ]
+        }
+      });
+
+      state.editor = {
+        setData: function (html) {
+          quill.root.innerHTML = html || "<p>Digite a notícia...</p>";
+        },
+        getData: function () {
+          return quill.root.innerHTML || "";
+        },
+        insertHtml: function (html) {
+          var delta = quill.clipboard.convert(html);
+          quill.updateContents(delta, 'silent');
+        },
+        focus: function () {
+          quill.focus();
+        },
+        __raw: quill
+      };
+
+      bindNewsToolbarCommands_(state.editor);
+      state.editor.setData("<p>Digite a notícia...</p>");
+      resolve(state.editor);
     });
   }
 
