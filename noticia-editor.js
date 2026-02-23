@@ -292,7 +292,16 @@
             "Pagination",
             "WProofreader",
             "MathType",
-            "DocumentOutline"
+            "DocumentOutline",
+            "MediaEmbed",
+            "WordCount",
+            "TableToolbar",
+            "TableCaption",
+            "ImageUpload",
+            "ImageCaption",
+            "LinkImage",
+            "AutoLink",
+            "Autoformat"
           ],
           toolbar: {
             items: [
