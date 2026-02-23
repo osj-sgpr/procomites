@@ -59,6 +59,7 @@
       "CBH Lontra e Corda",
       "CBH S. Teresa e S. Antônio",
       "CBH Coco e Caiapó",
+      "CBH Formoso do Araguaia",
     ];
   }
 

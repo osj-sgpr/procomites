@@ -33,6 +33,35 @@
     return msg.indexOf("ação inválida: " + a) >= 0 || msg.indexOf("acao invalida: " + a) >= 0;
   }
 
+  function loadScriptOnce(src) {
+    return new Promise(function (resolve, reject) {
+      var existing = document.querySelector("script[src='" + src + "']");
+      if (existing) {
+        if (window.CKEDITOR) return resolve();
+        existing.addEventListener("load", function () { resolve(); }, { once: true });
+        existing.addEventListener("error", function () { reject(new Error("Falha ao carregar script do editor.")); }, { once: true });
+        return;
+      }
+      var s = document.createElement("script");
+      s.src = src;
+      s.onload = function () { resolve(); };
+      s.onerror = function () { reject(new Error("Falha ao carregar script do editor.")); };
+      document.head.appendChild(s);
+    });
+  }
+
+  async function ensureCkeditorGlobal() {
+    if (window.CKEDITOR) return;
+    try {
+      await loadScriptOnce("https://cdn.ckeditor.com/4.25.1-lts/full-all/ckeditor.js");
+    } catch (e) {
+      await loadScriptOnce("https://cdnjs.cloudflare.com/ajax/libs/ckeditor/4.25.1-lts/ckeditor.js");
+    }
+    if (!window.CKEDITOR) {
+      throw new Error("Editor rico indisponível no navegador. Verifique bloqueio de CDN/rede.");
+    }
+  }
+
   function api(payload) {
     var base = window.APPS_SCRIPT_URL || "";
     if (!base) return Promise.reject(new Error("APPS_SCRIPT_URL não configurada."));
@@ -87,7 +116,8 @@
     "CBH Manoel Alves",
     "CBH Lontra e Corda",
     "CBH S. Teresa e S. Antônio",
-    "CBH Coco e Caiapó"
+    "CBH Coco e Caiapó",
+    "CBH Formoso do Araguaia"
   ];
 
   var PRESET_IMAGES = [
@@ -154,7 +184,7 @@
   function ensureEditor() {
     return new Promise(function (resolve) {
       if (state.editor) return resolve(state.editor);
-      state.editor = CKEDITOR.replace("editorConteudo", {
+      state.editor = window.CKEDITOR.replace("editorConteudo", {
         height: 520,
         extraPlugins: "justify,colorbutton,font,stylescombo",
         removeButtons: "Subscript,Superscript",
@@ -327,6 +357,7 @@
           perfil: loginResp.perfil,
           comite: loginResp.comite || ""
         };
+        userLine.textContent = (user.displayName || "") + " • " + (user.email || "") + " • " + (state.session.perfil || "");
         window.__SID__ = loginResp.sid || "";
         try {
           if (window.__SID__) localStorage.setItem("procomites.sid", window.__SID__);
@@ -334,7 +365,7 @@
 
         if (state.session.perfil !== "Admin" && state.session.perfil !== "Presidente") {
           editorCard.classList.add("hidden");
-          setNotice("err", "Somente Admin/Presidente podem editar notícias.");
+          setNotice("err", "Somente Admin/Presidente podem editar notícias. Perfil atual: " + (state.session.perfil || "não informado") + ".");
           return;
         }
 
@@ -344,11 +375,16 @@
           qs("notComite").disabled = true;
         }
 
+        editorCard.classList.remove("hidden");
+        await ensureCkeditorGlobal();
         await ensureEditor();
         await loadNoticiaIfNeeded();
-        editorCard.classList.remove("hidden");
       } catch (e) {
-        editorCard.classList.add("hidden");
+        if (state.session && (state.session.perfil === "Admin" || state.session.perfil === "Presidente")) {
+          editorCard.classList.remove("hidden");
+        } else {
+          editorCard.classList.add("hidden");
+        }
         if (isInvalidActionError(e, "login")) {
           setNotice("err", "Login indisponível no backend atual. Reimplante o Apps Script.");
           return;

@@ -73,6 +73,26 @@
     return (v || "").replace(/\D/g, "").slice(0, 11);
   }
 
+  function normalizePhone(v) {
+    return (v || "").replace(/\D/g, "").slice(0, 15);
+  }
+
+  function formatCpf(v) {
+    const d = normalizeCpf(v);
+    if (d.length <= 3) return d;
+    if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
+    if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+    return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+  }
+
+  function formatPhone(v) {
+    const d = normalizePhone(v).slice(0, 11);
+    if (d.length <= 2) return d;
+    if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+    if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+    return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  }
+
   function fmtDate(iso) {
     if (!iso) return "";
     const d = new Date(iso);
@@ -107,6 +127,7 @@
       "CBH Lontra e Corda",
       "CBH S. Teresa e S. Antônio",
       "CBH Coco e Caiapó",
+      "CBH Formoso do Araguaia",
     ];
 
     let reunioesAtuais = [];
@@ -249,6 +270,19 @@
     const panelCodigo = qs("panelCodigo");
     const codigoEl = qs("codigo");
 
+    if (cpfEl) {
+      cpfEl.addEventListener("input", () => {
+        cpfEl.value = formatCpf(cpfEl.value || "");
+      });
+    }
+
+    const telEl = qs("telefone");
+    if (telEl) {
+      telEl.addEventListener("input", () => {
+        telEl.value = formatPhone(telEl.value || "");
+      });
+    }
+
     function showCodigo(code) {
       if (panelCodigo) panelCodigo.classList.remove("hidden");
       if (codigoEl) codigoEl.textContent = code || "-";
@@ -325,7 +359,7 @@
           cpf,
           nome,
           email,
-          telefone,
+          telefone: normalizePhone(telefone),
           orgao,
           cidade,
           perfil,
@@ -482,6 +516,12 @@
     let idToken = null;
     const requestedPortalTab = (getUrlParam("portalTab") || "").toLowerCase();
 
+    if (cadTelefone) {
+      cadTelefone.addEventListener("input", () => {
+        cadTelefone.value = formatPhone(cadTelefone.value || "");
+      });
+    }
+
     const COMITES = [
       "CBH Lago de Palmas",
       "CBH Rio Palma",
@@ -489,6 +529,7 @@
       "CBH Lontra e Corda",
       "CBH S. Teresa e S. Antônio",
       "CBH Coco e Caiapó",
+      "CBH Formoso do Araguaia",
     ];
     let comitePublicoAtivo = COMITES[0] || "";
 
@@ -1335,7 +1376,7 @@
           idToken,
           idUsuario: session.idUsuario,
           comite,
-          telefone,
+          telefone: normalizePhone(telefone),
           orgao,
         });
         if (r.status === "ok") {
