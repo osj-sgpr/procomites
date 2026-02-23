@@ -146,6 +146,26 @@
           <div id="listaPendentes" class="list" style="margin-top: 12px;"></div>
         </div>
 
+        <div id="panelSolicitacoesDiarias" class="hidden" style="margin-top: 12px;">
+          <hr />
+          <div class="row" style="justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-weight: 700;">Solicitações de diárias</div>
+              <div id="solicitacoesDiariasInfo" class="small"></div>
+            </div>
+            <div class="row">
+              <select id="filtroSolicitacaoDiariaStatus" style="min-width: 180px;">
+                <option value="">Todos os status</option>
+                <option value="Solicitada">Solicitada</option>
+                <option value="Aprovada">Aprovada</option>
+                <option value="Negada">Negada</option>
+              </select>
+              <button id="btnCarregarSolicitacoesDiarias" type="button">Atualizar solicitações</button>
+            </div>
+          </div>
+          <div id="listaSolicitacoesDiarias" class="list" style="margin-top: 12px;"></div>
+        </div>
+
         <div id="panelPortalGestao" class="hidden" style="margin-top: 14px;">
           <hr />
           <div style="font-weight: 700;">Portal - Administração</div>
@@ -384,6 +404,6 @@
 
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="./app.js?v=20260223c"></script>
+  <script src="./app.js?v=20260223e"></script>
 </body>
 </html>

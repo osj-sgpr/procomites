@@ -154,11 +154,43 @@
     });
   }
 
+  function createBasicAtaEditorAdapter_(element, initialHtml) {
+    if (!element) throw new Error("Elemento do editor não encontrado.");
+    element.setAttribute("contenteditable", "true");
+    element.classList.add("tiptap-prose");
+    element.innerHTML = initialHtml || "<p>Digite a ATA aqui...</p>";
+
+    return {
+      setData: function (html) {
+        element.innerHTML = html || "<p>Digite a ATA aqui...</p>";
+      },
+      getData: function () {
+        return element.innerHTML || "";
+      },
+      insertHtml: function (html) {
+        var extra = String(html || "");
+        if (!extra) return;
+        element.focus();
+        try {
+          document.execCommand("insertHTML", false, extra);
+        } catch (e) {
+          element.innerHTML += extra;
+        }
+      },
+      focus: function () {
+        element.focus();
+      },
+      __raw: null
+    };
+  }
+
   function ensureEditor() {
     return new Promise(function (resolve, reject) {
       if (window.__ATA_EDITOR__) return resolve(window.__ATA_EDITOR__);
       if (!window.tiptap || !window.tiptap.Editor || !window.tiptapExtensions) {
-        return reject(new Error("Tiptap indisponivel no navegador. Verifique bloqueio de CDN/rede."));
+        window.__ATA_EDITOR__ = createBasicAtaEditorAdapter_(qs("editorAtaFull"), "<p>Digite a ATA aqui...</p>");
+        setNotice("ok", "Tiptap indisponível no navegador. Editor básico local ativado.");
+        return resolve(window.__ATA_EDITOR__);
       }
 
       var editor = new window.tiptap.Editor({

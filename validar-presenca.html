@@ -132,11 +132,11 @@
         <div class="row">
           <div class="field">
             <label>Comitê</label>
-            <select id="diariaComite"></select>
+            <select id="diariaComite" required></select>
           </div>
           <div class="field">
             <label>Tipo da solicitação</label>
-            <select id="diariaTipoParticipacao">
+            <select id="diariaTipoParticipacao" required>
               <option value="">Selecione...</option>
               <option value="reuniao">Participação em reunião ordinária</option>
               <option value="evento">Participação em evento</option>
@@ -157,37 +157,37 @@
         <div class="row" style="margin-top: 10px;">
           <div class="field">
             <label>CPF (apenas números)</label>
-            <input id="diariaCpf" inputmode="numeric" placeholder="00000000000" />
+            <input id="diariaCpf" inputmode="numeric" placeholder="00000000000" required />
           </div>
           <div class="field">
             <label>Nome completo</label>
-            <input id="diariaNome" />
+            <input id="diariaNome" required />
           </div>
         </div>
 
         <div class="row" style="margin-top: 10px;">
           <div class="field">
             <label>E-mail</label>
-            <input id="diariaEmail" type="email" />
+            <input id="diariaEmail" type="email" required />
           </div>
           <div class="field">
             <label>Telefone</label>
-            <input id="diariaTelefone" />
+            <input id="diariaTelefone" required />
           </div>
         </div>
 
         <div class="row" style="margin-top: 10px;">
           <div class="field">
             <label>Órgão</label>
-            <input id="diariaOrgao" />
+            <input id="diariaOrgao" required />
           </div>
           <div class="field">
             <label>Cidade de residência</label>
-            <input id="diariaCidade" />
+            <input id="diariaCidade" required />
           </div>
           <div class="field">
             <label>Perfil</label>
-            <select id="diariaPerfil">
+            <select id="diariaPerfil" required>
               <option value="Membro">Membro</option>
               <option value="Secretario">Secretário</option>
               <option value="Vice-Presidente">Vice-Presidente</option>
@@ -197,53 +197,53 @@
           </div>
         </div>
 
-        <div class="row" style="margin-top: 10px;">
+        <div id="diariaDescricaoSolicitacaoWrap" class="row hidden" style="margin-top: 10px;">
           <div class="field">
-            <label>Solicitação será para quê?</label>
-            <textarea id="diariaDescricaoSolicitacao" rows="2" placeholder="Ex.: participação no evento estadual de recursos hídricos."></textarea>
+            <label>Solicitação será para quê? (Detalhe o motivo da viagem)</label>
+            <textarea id="diariaDescricaoSolicitacao" rows="2" placeholder="Descreva o motivo da viagem."></textarea>
           </div>
         </div>
 
         <div class="row" style="margin-top: 10px;">
           <div class="field">
             <label>Descrição da ação que será realizada</label>
-            <textarea id="diariaDescricaoAcao" rows="3" placeholder="Descreva objetivo, agenda e atividades."></textarea>
+            <textarea id="diariaDescricaoAcao" rows="3" placeholder="Descreva objetivo, agenda e atividades." required></textarea>
           </div>
         </div>
 
         <div class="row" style="margin-top: 10px;">
           <div class="field">
             <label>Saída (origem)</label>
-            <input id="diariaOrigem" placeholder="Ex.: Palmas - TO" />
+            <input id="diariaOrigem" placeholder="Ex.: Palmas - TO" required />
           </div>
           <div class="field">
             <label>Chegada (destino)</label>
-            <input id="diariaDestino" placeholder="Ex.: Araguaína - TO" />
+            <input id="diariaDestino" placeholder="Ex.: Araguaína - TO" required />
           </div>
         </div>
 
         <div class="row" style="margin-top: 10px;">
           <div class="field">
             <label>Itinerário (de onde para onde, escalas, etc.)</label>
-            <textarea id="diariaItinerario" rows="2" placeholder="Ex.: Palmas > Gurupi > Araguaína"></textarea>
+            <textarea id="diariaItinerario" rows="2" placeholder="Ex.: Palmas > Gurupi > Araguaína" required></textarea>
           </div>
         </div>
 
         <div class="row" style="margin-top: 10px;">
           <div class="field">
             <label>Data e horário de saída</label>
-            <input id="diariaDataHoraSaida" type="datetime-local" />
+            <input id="diariaDataHoraSaida" type="datetime-local" required />
           </div>
           <div class="field">
             <label>Data e horário de chegada/retorno</label>
-            <input id="diariaDataHoraChegada" type="datetime-local" />
+            <input id="diariaDataHoraChegada" type="datetime-local" required />
           </div>
         </div>
 
         <div class="row" style="margin-top: 10px; align-items: flex-end;">
           <div class="field">
             <label>Upload de anexo (convite, card, ofício)</label>
-            <input id="diariaAnexo" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx" />
+            <input id="diariaAnexo" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx" required />
             <div id="diariaAnexoStatus" class="small" style="margin-top: 4px;"></div>
           </div>
           <button id="btnEnviarDiaria" class="primary" type="button">Enviar solicitação de diária</button>
@@ -297,6 +297,6 @@
   <script>
     window.APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPGdYJ6kYEPPDCZUaoCqyxoDvtlwQOTunvvkPP2RHjMg0TzvflUQdfMcGxE-hSTgT3/exec";
   </script>
-  <script src="./app.js?v=20260223d"></script>
+  <script src="./app.js?v=20260223e"></script>
 </body>
 </html>

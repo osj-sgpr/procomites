@@ -137,6 +137,8 @@
     const diariaTipoParticipacaoEl = qs("diariaTipoParticipacao");
     const diariaReuniaoWrapEl = qs("diariaReuniaoWrap");
     const diariaReuniaoEl = qs("diariaReuniao");
+    const diariaDescricaoSolicitacaoWrapEl = qs("diariaDescricaoSolicitacaoWrap");
+    const diariaDescricaoSolicitacaoEl = qs("diariaDescricaoSolicitacao");
     const diariaCpfEl = qs("diariaCpf");
     const diariaNomeEl = qs("diariaNome");
     const diariaEmailEl = qs("diariaEmail");
@@ -305,6 +307,12 @@
     function updateDiariaUi() {
       const tipo = (diariaTipoParticipacaoEl?.value || "").trim();
       if (diariaReuniaoWrapEl) diariaReuniaoWrapEl.classList.toggle("hidden", tipo !== "reuniao");
+      if (diariaReuniaoEl) diariaReuniaoEl.required = (tipo === "reuniao");
+      if (diariaDescricaoSolicitacaoWrapEl) diariaDescricaoSolicitacaoWrapEl.classList.toggle("hidden", tipo !== "outro");
+      if (diariaDescricaoSolicitacaoEl) {
+        diariaDescricaoSolicitacaoEl.required = (tipo === "outro");
+        if (tipo !== "outro") diariaDescricaoSolicitacaoEl.value = "";
+      }
     }
 
     async function carregarReunioesDiaria() {
@@ -322,10 +330,18 @@
       fillSelect(diariaReuniaoEl, items, items.length ? "Selecione a reunião..." : "Nenhuma reunião agendada");
     }
 
-    function readFileAsDataUrl(file) {
+    function readFileAsBase64WithMime(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onload = () => {
+          const raw = String(reader.result || "");
+          const m = raw.match(/^data:([^;,]+);base64,(.*)$/);
+          if (!m || !m[2]) return reject(new Error("Falha ao processar o anexo."));
+          resolve({
+            mimeType: (m[1] || file.type || "application/octet-stream").toString(),
+            base64: String(m[2] || ""),
+          });
+        };
         reader.onerror = () => reject(new Error("Falha ao ler o anexo."));
         reader.readAsDataURL(file);
       });
@@ -333,18 +349,20 @@
 
     async function uploadAnexoDiaria(file, comite, idReuniaoLocal) {
       if (!file) return { anexoUrl: "", anexoNome: "" };
-      const dataUrl = await readFileAsDataUrl(file);
-      if (!dataUrl) throw new Error("Arquivo de anexo inválido.");
-      const chunkSize = 1200;
-      const totalChunks = Math.ceil(dataUrl.length / chunkSize);
+      const filePayload = await readFileAsBase64WithMime(file);
+      const base64 = (filePayload && filePayload.base64) || "";
+      if (!base64) throw new Error("Arquivo de anexo inválido.");
+      const chunkSize = 8 * 1024;
+      const totalChunks = Math.ceil(base64.length / chunkSize);
       if (!totalChunks) throw new Error("Não foi possível processar o anexo.");
-      setAnexoStatus("Enviando anexo (0% )...");
+      setAnexoStatus("Enviando anexo (0%)...");
 
       const start = await api({
         acao: "iniciarUploadAnexoDiaria",
         comite,
         idReuniao: idReuniaoLocal,
         fileName: file.name || "anexo",
+        mimeType: filePayload.mimeType,
         totalChunks,
       });
       if (!start || !start.sucesso || !start.uploadId) {
@@ -352,7 +370,7 @@
       }
 
       for (let i = 0; i < totalChunks; i++) {
-        const part = dataUrl.slice(i * chunkSize, (i + 1) * chunkSize);
+        const part = base64.slice(i * chunkSize, (i + 1) * chunkSize);
         await api({
           acao: "enviarChunkAnexoDiaria",
           comite,
@@ -362,7 +380,7 @@
           data: part,
         });
         const percent = Math.round(((i + 1) / totalChunks) * 100);
-        setAnexoStatus(`Enviando anexo (${percent}% )...`);
+        setAnexoStatus(`Enviando anexo (${percent}%)...`);
       }
 
       const fin = await api({
@@ -505,37 +523,45 @@
       const orgao = (qs("diariaOrgao")?.value || "").trim();
       const cidade = (qs("diariaCidade")?.value || "").trim();
       const perfil = (qs("diariaPerfil")?.value || "Membro").trim();
-      const descricaoSolicitacao = (qs("diariaDescricaoSolicitacao")?.value || "").trim();
+      let descricaoSolicitacao = (diariaDescricaoSolicitacaoEl?.value || "").trim();
       const descricaoAcao = (qs("diariaDescricaoAcao")?.value || "").trim();
       const origem = (qs("diariaOrigem")?.value || "").trim();
       const destino = (qs("diariaDestino")?.value || "").trim();
       const itinerario = (qs("diariaItinerario")?.value || "").trim();
       const dataHoraSaida = (qs("diariaDataHoraSaida")?.value || "").trim();
       const dataHoraChegada = (qs("diariaDataHoraChegada")?.value || "").trim();
+      const arquivo = diariaAnexoEl?.files && diariaAnexoEl.files.length ? diariaAnexoEl.files[0] : null;
 
       if (!comite) return setNotice("err", "Selecione o comitê para a solicitação de diária.");
       if (!tipoParticipacao) return setNotice("err", "Selecione o tipo da solicitação.");
       if (tipoParticipacao === "reuniao" && !idReuniaoDiaria) return setNotice("err", "Selecione a reunião ordinária.");
       if (cpf.length !== 11) return setNotice("err", "CPF inválido.");
       if (!nome) return setNotice("err", "Informe o nome completo.");
-      if (!descricaoSolicitacao) return setNotice("err", "Informe para que é a solicitação.");
+      if (!email) return setNotice("err", "Informe o e-mail.");
+      if (!telefone) return setNotice("err", "Informe o telefone.");
+      if (!orgao) return setNotice("err", "Informe o órgão.");
+      if (!cidade) return setNotice("err", "Informe a cidade de residência.");
+      if (!perfil) return setNotice("err", "Selecione o perfil.");
+      if (tipoParticipacao === "outro" && !descricaoSolicitacao) return setNotice("err", "Detalhe o motivo da viagem para 'Outro motivo'.");
       if (!descricaoAcao) return setNotice("err", "Descreva a ação a ser realizada.");
       if (!origem || !destino) return setNotice("err", "Informe origem e destino.");
       if (!itinerario) return setNotice("err", "Informe o itinerário.");
       if (!dataHoraSaida || !dataHoraChegada) return setNotice("err", "Informe período de saída e chegada.");
+      if (!arquivo) return setNotice("err", "Anexe o documento obrigatório (convite, card ou ofício).");
+
+      if (!descricaoSolicitacao) {
+        descricaoSolicitacao = tipoParticipacao === "reuniao"
+          ? "Participação em reunião ordinária"
+          : "Participação em evento";
+      }
 
       btnEnviarDiaria.disabled = true;
       try {
         let anexoUrl = "";
         let anexoNome = "";
-        const arquivo = diariaAnexoEl?.files && diariaAnexoEl.files.length ? diariaAnexoEl.files[0] : null;
-        if (arquivo) {
-          const up = await uploadAnexoDiaria(arquivo, comite, idReuniaoDiaria);
-          anexoUrl = up.anexoUrl || "";
-          anexoNome = up.anexoNome || "";
-        } else {
-          setAnexoStatus("Nenhum anexo enviado.");
-        }
+        const up = await uploadAnexoDiaria(arquivo, comite, idReuniaoDiaria);
+        anexoUrl = up.anexoUrl || "";
+        anexoNome = up.anexoNome || "";
 
         const r = await api({
           acao: "salvarSolicitacaoDiariaPublica",
@@ -700,6 +726,11 @@
     const aprovInfo = qs("aprovInfo");
     const btnCarregarPendentes = qs("btnCarregarPendentes");
     const listaPendentes = qs("listaPendentes");
+    const panelSolicitacoesDiarias = qs("panelSolicitacoesDiarias");
+    const solicitacoesDiariasInfo = qs("solicitacoesDiariasInfo");
+    const filtroSolicitacaoDiariaStatus = qs("filtroSolicitacaoDiariaStatus");
+    const btnCarregarSolicitacoesDiarias = qs("btnCarregarSolicitacoesDiarias");
+    const listaSolicitacoesDiarias = qs("listaSolicitacoesDiarias");
     const btnReload = qs("btnReload");
 
     const btnToggleNova = qs("btnToggleNova");
@@ -1366,19 +1397,28 @@
           const h = document.createElement("h3");
           h.textContent = r.titulo || "(sem título)";
           const p = document.createElement("p");
-          p.textContent = `${fmtDate(r.data)} • ${r.tipo || ""} • ${r.local || ""}`;
+          p.textContent = `${fmtDate(r.data)} • ${r.tipo || ""} • ${r.local || ""} • ${r.comite || "-"}`;
           left.appendChild(h);
           left.appendChild(p);
 
           const right = document.createElement("div");
           right.className = "row";
           const btnOpen = document.createElement("button");
-          btnOpen.textContent = "Abrir";
-          btnOpen.addEventListener("click", () => {
+          btnOpen.className = "primary";
+          btnOpen.textContent = "Gerenciar";
+          btnOpen.addEventListener("click", async () => {
+            await selecionarReuniao(r);
+            panelReuniao?.scrollIntoView({ behavior: "smooth", block: "start" });
+          });
+          right.appendChild(btnOpen);
+
+          const btnAtaDireto = document.createElement("button");
+          btnAtaDireto.textContent = "Editor ATA";
+          btnAtaDireto.addEventListener("click", () => {
             const url = `./ata-editor.html?id=${encodeURIComponent(r.idReuniao || "")}`;
             window.open(url, "_blank", "noopener");
           });
-          right.appendChild(btnOpen);
+          right.appendChild(btnAtaDireto);
 
           item.appendChild(left);
           item.appendChild(right);
@@ -1576,6 +1616,7 @@
         panelPresidente.classList.add("hidden");
         panelCadastro?.classList.add("hidden");
         panelAprovacoes?.classList.add("hidden");
+        panelSolicitacoesDiarias?.classList.add("hidden");
         panelPortalGestao?.classList.add("hidden");
         panelAguardando.classList.remove("hidden");
         setNotice("err", r.mensagem || "Acesso não autorizado.");
@@ -1613,6 +1654,7 @@
         panelPresidente.classList.add("hidden");
         panelCadastro?.classList.remove("hidden");
         panelAprovacoes?.classList.add("hidden");
+        panelSolicitacoesDiarias?.classList.add("hidden");
         panelPortalGestao?.classList.add("hidden");
         setNotice("err", "Complete seu cadastro para solicitar aprovação.");
         return;
@@ -1644,10 +1686,13 @@
       // Admin/Presidente pode aprovar pendentes
       if (session.perfil === "Admin" || session.perfil === "Presidente") {
         panelAprovacoes?.classList.remove("hidden");
+        panelSolicitacoesDiarias?.classList.remove("hidden");
         await carregarPendentes();
+        await carregarSolicitacoesDiarias();
         await carregarPortalGestao();
       } else {
         panelAprovacoes?.classList.add("hidden");
+        panelSolicitacoesDiarias?.classList.add("hidden");
         panelPortalGestao?.classList.add("hidden");
       }
     }
@@ -1739,6 +1784,153 @@
         item.appendChild(right);
         listaPendentes.appendChild(item);
       });
+    }
+
+    function labelTipoParticipacaoDiaria(tipo) {
+      const t = String(tipo || "").trim();
+      if (t === "ReuniaoOrdinaria") return "Reunião ordinária";
+      if (t === "Evento") return "Evento";
+      if (t === "Outro") return "Outro motivo";
+      return t || "-";
+    }
+
+    async function decidirSolicitacaoDiaria(item, decisao) {
+      if (!item || !item.idSolicitacao) return;
+      let justificativa = "";
+      if (decisao === "negar") {
+        const j = window.prompt("Informe a justificativa da negativa:", "");
+        if (j == null) return;
+        justificativa = String(j || "").trim();
+        if (!justificativa) {
+          setNotice("err", "A justificativa é obrigatória para negar a solicitação.");
+          return;
+        }
+      }
+
+      try {
+        await api({
+          acao: "decidirSolicitacaoDiaria",
+          idToken,
+          idSolicitacao: item.idSolicitacao,
+          decisao,
+          justificativa,
+        });
+        setNotice("ok", `Solicitação ${decisao === "aprovar" ? "aprovada" : "negada"} com sucesso.`);
+        await carregarSolicitacoesDiarias();
+      } catch (e) {
+        setNotice("err", e.message);
+      }
+    }
+
+    function renderSolicitacoesDiarias(items) {
+      if (!listaSolicitacoesDiarias) return;
+      listaSolicitacoesDiarias.innerHTML = "";
+      if (!items || !items.length) {
+        const div = document.createElement("div");
+        div.className = "notice";
+        div.textContent = "Nenhuma solicitação de diária encontrada.";
+        listaSolicitacoesDiarias.appendChild(div);
+        return;
+      }
+
+      items.forEach((x) => {
+        const item = document.createElement("div");
+        item.className = "item";
+
+        const left = document.createElement("div");
+        const h = document.createElement("h3");
+        const nome = (x.nome || "-").toString();
+        const cpf = (x.cpf || "").toString();
+        h.textContent = cpf ? `${nome} • ${cpf}` : nome;
+
+        const p1 = document.createElement("p");
+        p1.textContent = `${x.comite || "-"} • ${labelTipoParticipacaoDiaria(x.tipoParticipacao)} • Status: ${x.status || "Solicitada"}`;
+
+        const p2 = document.createElement("p");
+        p2.textContent = `${x.origem || "-"} → ${x.destino || "-"} • Saída: ${fmtDate(x.dataHoraSaida)} • Retorno: ${fmtDate(x.dataHoraChegada)}`;
+
+        const p3 = document.createElement("p");
+        p3.textContent = `Ação: ${x.descricaoAcao || "-"}`;
+
+        left.appendChild(h);
+        left.appendChild(p1);
+        left.appendChild(p2);
+        left.appendChild(p3);
+
+        if (x.justificativaDecisao) {
+          const pJust = document.createElement("p");
+          pJust.textContent = `Justificativa: ${x.justificativaDecisao}`;
+          left.appendChild(pJust);
+        }
+
+        if (x.decididoPor || x.decididoEm) {
+          const pDec = document.createElement("p");
+          pDec.className = "small";
+          pDec.textContent = `Decisão por ${x.decididoPor || "-"} (${x.decididoPerfil || "-"}) em ${fmtDate(x.decididoEm) || "-"}`;
+          left.appendChild(pDec);
+        }
+
+        const right = document.createElement("div");
+        right.className = "row";
+
+        if (x.anexoUrl) {
+          const link = document.createElement("a");
+          link.href = x.anexoUrl;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = x.anexoNome ? "Ver anexo" : "Abrir anexo";
+          right.appendChild(link);
+        }
+
+        const status = (x.status || "Solicitada").toString().trim();
+        if (status === "Solicitada") {
+          const btnAprovar = document.createElement("button");
+          btnAprovar.className = "primary";
+          btnAprovar.textContent = "Aprovar";
+          btnAprovar.addEventListener("click", async () => {
+            btnAprovar.disabled = true;
+            try {
+              await decidirSolicitacaoDiaria(x, "aprovar");
+            } finally {
+              btnAprovar.disabled = false;
+            }
+          });
+
+          const btnNegar = document.createElement("button");
+          btnNegar.className = "danger";
+          btnNegar.textContent = "Negar";
+          btnNegar.addEventListener("click", async () => {
+            btnNegar.disabled = true;
+            try {
+              await decidirSolicitacaoDiaria(x, "negar");
+            } finally {
+              btnNegar.disabled = false;
+            }
+          });
+
+          right.appendChild(btnAprovar);
+          right.appendChild(btnNegar);
+        }
+
+        item.appendChild(left);
+        item.appendChild(right);
+        listaSolicitacoesDiarias.appendChild(item);
+      });
+    }
+
+    async function carregarSolicitacoesDiarias() {
+      if (!session || (session.perfil !== "Admin" && session.perfil !== "Presidente")) return;
+      try {
+        const status = (filtroSolicitacaoDiariaStatus?.value || "").trim();
+        const r = await api({ acao: "listarSolicitacoesDiariasGestao", idToken, status });
+        if (solicitacoesDiariasInfo) {
+          if (r.perfilRequester === "Admin") solicitacoesDiariasInfo.textContent = "Você vê solicitações de todos os comitês.";
+          else solicitacoesDiariasInfo.textContent = "Você vê solicitações do comitê: " + (r.comiteRequester || "-");
+        }
+        renderSolicitacoesDiarias(r.itens || []);
+      } catch (e) {
+        setNotice("err", e.message);
+      }
     }
 
     async function carregarPendentes() {
@@ -1997,10 +2189,17 @@
       await auth.signOut();
     });
 
-    btnReload?.addEventListener("click", carregarReunioes);
+    btnReload?.addEventListener("click", async () => {
+      await carregarReunioes();
+      if (session && (session.perfil === "Admin" || session.perfil === "Presidente")) {
+        await carregarSolicitacoesDiarias();
+      }
+    });
 
     btnSalvarCadastro?.addEventListener("click", salvarCadastro);
     btnCarregarPendentes?.addEventListener("click", carregarPendentes);
+    btnCarregarSolicitacoesDiarias?.addEventListener("click", carregarSolicitacoesDiarias);
+    filtroSolicitacaoDiariaStatus?.addEventListener("change", carregarSolicitacoesDiarias);
 
     btnToggleNova?.addEventListener("click", () => formNova.classList.toggle("hidden"));
     btnCriarReuniao?.addEventListener("click", criarReuniao);

@@ -221,11 +221,43 @@
     });
   }
 
+  function createBasicEditorAdapter_(element, initialHtml) {
+    if (!element) throw new Error("Elemento do editor não encontrado.");
+    element.setAttribute("contenteditable", "true");
+    element.classList.add("tiptap-prose");
+    element.innerHTML = initialHtml || "<p>Digite a notícia...</p>";
+
+    return {
+      setData: function (html) {
+        element.innerHTML = html || "<p>Digite a notícia...</p>";
+      },
+      getData: function () {
+        return element.innerHTML || "";
+      },
+      insertHtml: function (html) {
+        var extra = String(html || "");
+        if (!extra) return;
+        element.focus();
+        try {
+          document.execCommand("insertHTML", false, extra);
+        } catch (e) {
+          element.innerHTML += extra;
+        }
+      },
+      focus: function () {
+        element.focus();
+      },
+      __raw: null
+    };
+  }
+
   function ensureEditor() {
     return new Promise(function (resolve, reject) {
       if (state.editor) return resolve(state.editor);
       if (!window.tiptap || !window.tiptap.Editor || !window.tiptapExtensions) {
-        return reject(new Error("Tiptap indisponível no navegador. Verifique bloqueio de CDN/rede."));
+        state.editor = createBasicEditorAdapter_(qs("editorConteudo"), "<p>Digite a notícia...</p>");
+        setNotice("ok", "Tiptap indisponível no navegador. Editor básico local ativado.");
+        return resolve(state.editor);
       }
 
       var editor = new window.tiptap.Editor({
