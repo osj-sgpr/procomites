@@ -1249,7 +1249,13 @@
         btn.addEventListener("click", async () => {
           btn.disabled = true;
           try {
-            await api({ acao: "validarParticipacao", idToken, idReuniao: reuniaoAtual.idReuniao, cpf: x.cpf });
+            await api({
+              acao: "validarParticipacao",
+              idToken,
+              idReuniao: reuniaoAtual.idReuniao,
+              idConfirmacao: x.idConfirmacao,
+              cpf: x.cpf,
+            });
             await carregarValidacoes();
           } catch (e) {
             setNotice("err", e.message);
