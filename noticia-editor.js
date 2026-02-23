@@ -276,6 +276,44 @@
 
       ClassicEditorCtor
         .create(qs("editorConteudo"), {
+          removePlugins: [
+            "CKBox",
+            "CKFinder",
+            "CKFinderUploadAdapter",
+            "EasyImage",
+            "RealTimeCollaborativeComments",
+            "RealTimeCollaborativeTrackChanges",
+            "RealTimeCollaborativeRevisionHistory",
+            "PresenceList",
+            "Comments",
+            "TrackChanges",
+            "TrackChangesData",
+            "RevisionHistory",
+            "Pagination",
+            "WProofreader",
+            "MathType",
+            "DocumentOutline",
+            "MediaEmbed",
+            "WordCount",
+            "TableToolbar",
+            "TableCaption",
+            "ImageUpload",
+            "ImageCaption",
+            "LinkImage",
+            "AutoLink",
+            "Autoformat",
+            "ImageInsert",
+            "Image",
+            "ImageStyle",
+            "ImageToolbar",
+            "PictureEditing",
+            "CloudServices",
+            "ExportPdf",
+            "ExportWord",
+            "ImportWord",
+            "Markdown",
+            "RestrictedEditing"
+          ],
           toolbar: {
             items: [
               "undo", "redo", "|",
@@ -286,7 +324,7 @@
               "highlight", "|",
               "bulletedList", "numberedList", "outdent", "indent", "|",
               "blockQuote", "codeBlock", "|",
-              "link", "imageUpload", "insertTable", "mediaEmbed", "|",
+              "link", "insertTable", "|",
               "horizontalLine", "pageBreak", "|",
               "removeFormat"
             ]
@@ -327,12 +365,6 @@
             contentToolbar: [
               "tableColumn", "tableRow", "mergeTableCells",
               "tableProperties", "tableCellProperties"
-            ]
-          },
-          image: {
-            toolbar: [
-              "imageTextAlternative", "imageStyle:full", "imageStyle:side", "imageStyle:inline",
-              "linkImage", "imageCaption"
             ]
           },
           link: {
