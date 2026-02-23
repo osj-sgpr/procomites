@@ -120,6 +120,36 @@
     const panelEscolha = qs("panelEscolha");
     const pubComite = qs("pubComite");
     const pubReuniao = qs("pubReuniao");
+    const panelNovo = qs("panelNovo");
+    const panelCodigo = qs("panelCodigo");
+    const codigoEl = qs("codigo");
+    const cpfEl = qs("cpf");
+    const btnValidar = qs("btnValidar");
+
+    const btnPublicTabConfirmar = qs("btnPublicTabConfirmar");
+    const btnPublicTabDiaria = qs("btnPublicTabDiaria");
+    const btnPublicTabAssinatura = qs("btnPublicTabAssinatura");
+    const panelPublicConfirmar = qs("panelPublicConfirmar");
+    const panelPublicDiaria = qs("panelPublicDiaria");
+    const panelPublicAssinatura = qs("panelPublicAssinatura");
+
+    const diariaComiteEl = qs("diariaComite");
+    const diariaTipoParticipacaoEl = qs("diariaTipoParticipacao");
+    const diariaReuniaoWrapEl = qs("diariaReuniaoWrap");
+    const diariaReuniaoEl = qs("diariaReuniao");
+    const diariaCpfEl = qs("diariaCpf");
+    const diariaNomeEl = qs("diariaNome");
+    const diariaEmailEl = qs("diariaEmail");
+    const diariaTelefoneEl = qs("diariaTelefone");
+    const diariaAnexoEl = qs("diariaAnexo");
+    const diariaAnexoStatusEl = qs("diariaAnexoStatus");
+    const btnEnviarDiaria = qs("btnEnviarDiaria");
+
+    const assinaturaIdConfirmacaoEl = qs("assinaturaIdConfirmacao");
+    const assinaturaCodigoEl = qs("assinaturaCodigo");
+    const btnValidarAssinatura = qs("btnValidarAssinatura");
+    const assinaturaResultadoEl = qs("assinaturaResultado");
+    const assinaturaResultadoTextoEl = qs("assinaturaResultadoTexto");
 
     const COMITES = [
       "CBH Lago de Palmas",
@@ -132,6 +162,8 @@
     ];
 
     let reunioesAtuais = [];
+    let reunioesDiariaAtuais = [];
+    let publicTabAtual = "confirmar";
 
     function isHttpUrl(v) {
       try {
@@ -140,6 +172,21 @@
       } catch (e) {
         return false;
       }
+    }
+
+    function fillSelect(selectEl, items, placeholder) {
+      if (!selectEl) return;
+      selectEl.innerHTML = "";
+      const opt0 = document.createElement("option");
+      opt0.value = "";
+      opt0.textContent = placeholder || "Selecione...";
+      selectEl.appendChild(opt0);
+      (items || []).forEach((x) => {
+        const o = document.createElement("option");
+        o.value = x.value;
+        o.textContent = x.label;
+        selectEl.appendChild(o);
+      });
     }
 
     function renderReuniaoHeader(reuniao) {
@@ -175,6 +222,12 @@
       }
     }
 
+    async function carregarReunioesPublicasPorComite(comite) {
+      if (!comite) return [];
+      const r = await api({ acao: "listarReunioesPublicas", comite });
+      return r.reunioes || [];
+    }
+
     function syncSelectedReuniao() {
       const selected = (pubReuniao?.value || "").trim();
       if (!selected && idReuniao && !reunioesAtuais.length) return idReuniao;
@@ -182,21 +235,6 @@
       const reuniao = reunioesAtuais.find((x) => (x.idReuniao || "").toString().trim() === idReuniao) || null;
       renderReuniaoHeader(reuniao);
       return idReuniao;
-    }
-
-    function fillSelect(selectEl, items, placeholder) {
-      if (!selectEl) return;
-      selectEl.innerHTML = "";
-      const opt0 = document.createElement("option");
-      opt0.value = "";
-      opt0.textContent = placeholder || "Selecione...";
-      selectEl.appendChild(opt0);
-      (items || []).forEach((x) => {
-        const o = document.createElement("option");
-        o.value = x.value;
-        o.textContent = x.label;
-        selectEl.appendChild(o);
-      });
     }
 
     async function carregarReunioesPublicas() {
@@ -208,8 +246,7 @@
         renderReuniaoHeader(null);
         return;
       }
-      const r = await api({ acao: "listarReunioesPublicas", comite });
-      reunioesAtuais = r.reunioes || [];
+      reunioesAtuais = await carregarReunioesPublicasPorComite(comite);
       const items = reunioesAtuais.map((x) => ({
         value: x.idReuniao,
         label: `${fmtDate(x.data)} - ${x.titulo || "(sem título)"}`,
@@ -217,7 +254,6 @@
       fillSelect(pubReuniao, items, items.length ? "Selecione a reunião..." : "Nenhuma reunião agendada");
       idReuniao = "";
       renderReuniaoHeader(null);
-
       if (items.length === 1 && pubReuniao) {
         pubReuniao.value = items[0].value;
         syncSelectedReuniao();
@@ -227,109 +263,140 @@
     async function carregarDetalhePorId(id) {
       if (!id) {
         renderReuniaoHeader(null);
-        return;
+        return null;
       }
       for (let i = 0; i < COMITES.length; i++) {
         const comite = COMITES[i];
         try {
-          const r = await api({ acao: "listarReunioesPublicas", comite });
-          const reunioes = r.reunioes || [];
+          const reunioes = await carregarReunioesPublicasPorComite(comite);
           const found = reunioes.find((x) => (x.idReuniao || "").toString().trim() === id);
           if (found) {
             renderReuniaoHeader(found);
-            return;
+            return found;
           }
         } catch (e) {
           // ignora erro por comitê e tenta os próximos
         }
       }
       renderReuniaoHeader(null);
+      return null;
     }
 
-    if (!idReuniao) {
-      if (panelEscolha) panelEscolha.classList.remove("hidden");
-      fillSelect(pubComite, COMITES.map((c) => ({ value: c, label: c })), "Selecione o comitê...");
-      await carregarReunioesPublicas();
-      pubComite?.addEventListener("change", async () => {
-        try {
-          if (panelNovo) panelNovo.classList.add("hidden");
-          if (panelCodigo) panelCodigo.classList.add("hidden");
-          await carregarReunioesPublicas();
-        } catch (e) {
-          setNotice("err", e.message);
-        }
-      });
-      pubReuniao?.addEventListener("change", () => {
-        syncSelectedReuniao();
-        updateDiariaFieldsUi();
-      });
-    } else {
-      await carregarDetalhePorId(idReuniao);
+    function setPublicTab(tab) {
+      publicTabAtual = tab;
+      if (btnPublicTabConfirmar) btnPublicTabConfirmar.classList.toggle("active", tab === "confirmar");
+      if (btnPublicTabDiaria) btnPublicTabDiaria.classList.toggle("active", tab === "diaria");
+      if (btnPublicTabAssinatura) btnPublicTabAssinatura.classList.toggle("active", tab === "assinatura");
+      if (panelPublicConfirmar) panelPublicConfirmar.classList.toggle("hidden", tab !== "confirmar");
+      if (panelPublicDiaria) panelPublicDiaria.classList.toggle("hidden", tab !== "diaria");
+      if (panelPublicAssinatura) panelPublicAssinatura.classList.toggle("hidden", tab !== "assinatura");
     }
-
-    const cpfEl = qs("cpf");
-    const btnValidar = qs("btnValidar");
-    const panelNovo = qs("panelNovo");
-    const panelCodigo = qs("panelCodigo");
-    const codigoEl = qs("codigo");
-    const precisaDiariaEl = qs("precisaDiaria");
-    const tipoSolicitacaoDiariaEl = qs("tipoSolicitacaoDiaria");
-    const diariaFieldsEl = qs("diariaFields");
-    const diariaViagemFieldsEl = qs("diariaViagemFields");
-    const diariaHintEl = qs("diariaHint");
-
-    function isReuniaoPresencialSelecionada() {
-      var tipo = ((reuniaoSelecionadaPublica && reuniaoSelecionadaPublica.tipo) || "").toString().trim().toLowerCase();
-      return tipo === "presencial";
-    }
-
-    function updateDiariaFieldsUi() {
-      const precisa = (precisaDiariaEl?.value || "NÃO").trim();
-      const tipo = (tipoSolicitacaoDiariaEl?.value || "").trim();
-      if (diariaFieldsEl) diariaFieldsEl.classList.toggle("hidden", precisa !== "SIM");
-      if (diariaViagemFieldsEl) diariaViagemFieldsEl.classList.toggle("hidden", !(precisa === "SIM" && tipo === "viagem"));
-
-      if (diariaHintEl) {
-        if (precisa !== "SIM") {
-          diariaHintEl.textContent = "";
-        } else if (tipo === "reuniao") {
-          const nome = (reuniaoSelecionadaPublica && reuniaoSelecionadaPublica.titulo) || "reunião selecionada";
-          const comite = (reuniaoSelecionadaPublica && reuniaoSelecionadaPublica.comite) || "";
-          diariaHintEl.textContent = "Diária para reunião presencial: " + nome + (comite ? (" (" + comite + ")") : "") + ".";
-        } else if (tipo === "viagem") {
-          diariaHintEl.textContent = "Preencha os dados de deslocamento e do evento/curso.";
-        } else {
-          diariaHintEl.textContent = "Selecione o tipo da solicitação de diária.";
-        }
-      }
-    }
-
-    if (cpfEl) {
-      cpfEl.addEventListener("input", () => {
-        cpfEl.value = formatCpf(cpfEl.value || "");
-      });
-    }
-
-    const telEl = qs("telefone");
-    if (telEl) {
-      telEl.addEventListener("input", () => {
-        telEl.value = formatPhone(telEl.value || "");
-      });
-    }
-
-    precisaDiariaEl?.addEventListener("change", updateDiariaFieldsUi);
-    tipoSolicitacaoDiariaEl?.addEventListener("change", updateDiariaFieldsUi);
 
     function showCodigo(code) {
       if (panelCodigo) panelCodigo.classList.remove("hidden");
       if (codigoEl) codigoEl.textContent = code || "-";
     }
 
+    function setAnexoStatus(msg) {
+      if (!diariaAnexoStatusEl) return;
+      diariaAnexoStatusEl.textContent = msg || "";
+    }
+
+    function updateDiariaUi() {
+      const tipo = (diariaTipoParticipacaoEl?.value || "").trim();
+      if (diariaReuniaoWrapEl) diariaReuniaoWrapEl.classList.toggle("hidden", tipo !== "reuniao");
+    }
+
+    async function carregarReunioesDiaria() {
+      const comite = (diariaComiteEl?.value || "").trim();
+      if (!comite) {
+        reunioesDiariaAtuais = [];
+        fillSelect(diariaReuniaoEl, [], "Selecione a reunião...");
+        return;
+      }
+      reunioesDiariaAtuais = await carregarReunioesPublicasPorComite(comite);
+      const items = reunioesDiariaAtuais.map((x) => ({
+        value: x.idReuniao,
+        label: `${fmtDate(x.data)} - ${x.titulo || "(sem título)"}`,
+      }));
+      fillSelect(diariaReuniaoEl, items, items.length ? "Selecione a reunião..." : "Nenhuma reunião agendada");
+    }
+
+    function readFileAsDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => reject(new Error("Falha ao ler o anexo."));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function uploadAnexoDiaria(file, comite, idReuniaoLocal) {
+      if (!file) return { anexoUrl: "", anexoNome: "" };
+      const dataUrl = await readFileAsDataUrl(file);
+      if (!dataUrl) throw new Error("Arquivo de anexo inválido.");
+      const chunkSize = 1200;
+      const totalChunks = Math.ceil(dataUrl.length / chunkSize);
+      if (!totalChunks) throw new Error("Não foi possível processar o anexo.");
+      setAnexoStatus("Enviando anexo (0% )...");
+
+      const start = await api({
+        acao: "iniciarUploadAnexoDiaria",
+        comite,
+        idReuniao: idReuniaoLocal,
+        fileName: file.name || "anexo",
+        totalChunks,
+      });
+      if (!start || !start.sucesso || !start.uploadId) {
+        throw new Error((start && start.mensagem) || "Falha ao iniciar upload do anexo.");
+      }
+
+      for (let i = 0; i < totalChunks; i++) {
+        const part = dataUrl.slice(i * chunkSize, (i + 1) * chunkSize);
+        await api({
+          acao: "enviarChunkAnexoDiaria",
+          comite,
+          idReuniao: idReuniaoLocal,
+          uploadId: start.uploadId,
+          chunkIndex: i,
+          data: part,
+        });
+        const percent = Math.round(((i + 1) / totalChunks) * 100);
+        setAnexoStatus(`Enviando anexo (${percent}% )...`);
+      }
+
+      const fin = await api({
+        acao: "finalizarUploadAnexoDiaria",
+        comite,
+        idReuniao: idReuniaoLocal,
+        uploadId: start.uploadId,
+      });
+      if (!fin || !fin.sucesso || !fin.url) {
+        throw new Error((fin && fin.mensagem) || "Falha ao finalizar upload do anexo.");
+      }
+      setAnexoStatus("Anexo enviado.");
+      return { anexoUrl: fin.url || "", anexoNome: fin.fileName || (file.name || "") };
+    }
+
+    function renderAssinaturaResultado(ok, msg, dados) {
+      if (!assinaturaResultadoEl || !assinaturaResultadoTextoEl) return;
+      assinaturaResultadoEl.classList.remove("hidden");
+      const linhas = [];
+      if (msg) linhas.push(msg);
+      if (ok && dados) {
+        if (dados.nome) linhas.push("Nome: " + dados.nome);
+        if (dados.cpf) linhas.push("CPF: " + dados.cpf);
+        if (dados.comite) linhas.push("Comitê: " + dados.comite);
+        if (dados.reuniaoTitulo) linhas.push("Reunião: " + dados.reuniaoTitulo);
+        if (dados.dataHoraValidacao) linhas.push("Data de validação: " + dados.dataHoraValidacao);
+      }
+      assinaturaResultadoTextoEl.textContent = linhas.join("\n");
+    }
+
     async function validar() {
       setNotice(null, "");
       if (panelNovo) panelNovo.classList.add("hidden");
       if (panelCodigo) panelCodigo.classList.add("hidden");
-
       syncSelectedReuniao();
 
       if (!idReuniao) {
@@ -382,30 +449,10 @@
       const orgao = (qs("orgao")?.value || "").trim();
       const cidade = (qs("cidade")?.value || "").trim();
       const perfil = (qs("perfil")?.value || "Membro").trim();
-      const precisaDiaria = (qs("precisaDiaria")?.value || "NÃO").trim();
-      const tipoSolicitacaoDiaria = (qs("tipoSolicitacaoDiaria")?.value || "").trim();
-      const localSaida = (qs("diariaLocalSaida")?.value || "").trim();
-      const destino = (qs("diariaDestino")?.value || "").trim();
-      const nomeEvento = (qs("diariaNomeEvento")?.value || "").trim();
-      const dataHoraSaida = (qs("diariaDataHoraSaida")?.value || "").trim();
-      const dataHoraInicioEvento = (qs("diariaDataHoraInicioEvento")?.value || "").trim();
-      const dataHoraFimEvento = (qs("diariaDataHoraFimEvento")?.value || "").trim();
-      const dataHoraRetorno = (qs("diariaDataHoraRetorno")?.value || "").trim();
 
+      if (!idReuniao) return setNotice("err", "Selecione a reunião.");
       if (cpf.length !== 11) return setNotice("err", "CPF inválido.");
       if (!nome) return setNotice("err", "Informe o nome.");
-
-      if (precisaDiaria === "SIM") {
-        if (!tipoSolicitacaoDiaria) return setNotice("err", "Selecione o tipo da solicitação de diária.");
-        if (tipoSolicitacaoDiaria === "reuniao" && !isReuniaoPresencialSelecionada()) {
-          return setNotice("err", "Diária para reunião só é permitida para reunião presencial.");
-        }
-        if (tipoSolicitacaoDiaria === "viagem") {
-          if (!localSaida || !destino || !nomeEvento || !dataHoraSaida || !dataHoraInicioEvento || !dataHoraFimEvento || !dataHoraRetorno) {
-            return setNotice("err", "Preencha todos os dados da viagem/curso para solicitar diária.");
-          }
-        }
-      }
 
       const btn = qs("btnSalvarNovo");
       btn.disabled = true;
@@ -420,15 +467,7 @@
           orgao,
           cidade,
           perfil,
-          precisaDiaria,
-          tipoSolicitacaoDiaria,
-          localSaida,
-          destino,
-          nomeEvento,
-          dataHoraSaida,
-          dataHoraInicioEvento,
-          dataHoraFimEvento,
-          dataHoraRetorno,
+          precisaDiaria: "NÃO",
         });
         if (r.status === "ja_presente") {
           setNotice("ok", r.mensagem || "Participação já validada.");
@@ -454,9 +493,183 @@
       }
     }
 
+    async function salvarSolicitacaoDiaria() {
+      setNotice(null, "");
+      const comite = (diariaComiteEl?.value || "").trim();
+      const tipoParticipacao = (diariaTipoParticipacaoEl?.value || "").trim();
+      const idReuniaoDiaria = tipoParticipacao === "reuniao" ? (diariaReuniaoEl?.value || "").trim() : "";
+      const cpf = normalizeCpf(diariaCpfEl?.value || "");
+      const nome = (diariaNomeEl?.value || "").trim();
+      const email = (diariaEmailEl?.value || "").trim();
+      const telefone = normalizePhone(diariaTelefoneEl?.value || "");
+      const orgao = (qs("diariaOrgao")?.value || "").trim();
+      const cidade = (qs("diariaCidade")?.value || "").trim();
+      const perfil = (qs("diariaPerfil")?.value || "Membro").trim();
+      const descricaoSolicitacao = (qs("diariaDescricaoSolicitacao")?.value || "").trim();
+      const descricaoAcao = (qs("diariaDescricaoAcao")?.value || "").trim();
+      const origem = (qs("diariaOrigem")?.value || "").trim();
+      const destino = (qs("diariaDestino")?.value || "").trim();
+      const itinerario = (qs("diariaItinerario")?.value || "").trim();
+      const dataHoraSaida = (qs("diariaDataHoraSaida")?.value || "").trim();
+      const dataHoraChegada = (qs("diariaDataHoraChegada")?.value || "").trim();
+
+      if (!comite) return setNotice("err", "Selecione o comitê para a solicitação de diária.");
+      if (!tipoParticipacao) return setNotice("err", "Selecione o tipo da solicitação.");
+      if (tipoParticipacao === "reuniao" && !idReuniaoDiaria) return setNotice("err", "Selecione a reunião ordinária.");
+      if (cpf.length !== 11) return setNotice("err", "CPF inválido.");
+      if (!nome) return setNotice("err", "Informe o nome completo.");
+      if (!descricaoSolicitacao) return setNotice("err", "Informe para que é a solicitação.");
+      if (!descricaoAcao) return setNotice("err", "Descreva a ação a ser realizada.");
+      if (!origem || !destino) return setNotice("err", "Informe origem e destino.");
+      if (!itinerario) return setNotice("err", "Informe o itinerário.");
+      if (!dataHoraSaida || !dataHoraChegada) return setNotice("err", "Informe período de saída e chegada.");
+
+      btnEnviarDiaria.disabled = true;
+      try {
+        let anexoUrl = "";
+        let anexoNome = "";
+        const arquivo = diariaAnexoEl?.files && diariaAnexoEl.files.length ? diariaAnexoEl.files[0] : null;
+        if (arquivo) {
+          const up = await uploadAnexoDiaria(arquivo, comite, idReuniaoDiaria);
+          anexoUrl = up.anexoUrl || "";
+          anexoNome = up.anexoNome || "";
+        } else {
+          setAnexoStatus("Nenhum anexo enviado.");
+        }
+
+        const r = await api({
+          acao: "salvarSolicitacaoDiariaPublica",
+          comite,
+          tipoParticipacao,
+          idReuniao: idReuniaoDiaria,
+          cpf,
+          nome,
+          email,
+          telefone,
+          orgao,
+          cidade,
+          perfil,
+          descricaoSolicitacao,
+          descricaoAcao,
+          origem,
+          destino,
+          itinerario,
+          dataHoraSaida,
+          dataHoraChegada,
+          anexoUrl,
+          anexoNome,
+        });
+        if (r.status === "ok") {
+          setNotice("ok", r.mensagem || "Solicitação de diária enviada com sucesso.");
+          if (diariaAnexoEl) diariaAnexoEl.value = "";
+          return;
+        }
+        setNotice("err", r.mensagem || "Não foi possível enviar a solicitação de diária.");
+      } catch (e) {
+        setNotice("err", e.message);
+      } finally {
+        btnEnviarDiaria.disabled = false;
+      }
+    }
+
+    async function validarAssinatura() {
+      setNotice(null, "");
+      if (assinaturaResultadoEl) assinaturaResultadoEl.classList.add("hidden");
+      const idConfirmacao = (assinaturaIdConfirmacaoEl?.value || "").trim();
+      const codigo = (assinaturaCodigoEl?.value || "").trim();
+      if (!idConfirmacao) return setNotice("err", "Informe o ID da confirmação.");
+      if (!codigo) return setNotice("err", "Informe o código da assinatura.");
+
+      btnValidarAssinatura.disabled = true;
+      try {
+        const r = await api({ acao: "validarAssinatura", idConfirmacao, codigo });
+        if (r.status === "ok") {
+          setNotice("ok", r.mensagem || "Assinatura válida.");
+          renderAssinaturaResultado(true, r.mensagem || "Assinatura válida.", r.dados || null);
+          return;
+        }
+        setNotice("err", r.mensagem || "Assinatura inválida.");
+        renderAssinaturaResultado(false, r.mensagem || "Assinatura inválida.", null);
+      } catch (e) {
+        setNotice("err", e.message);
+      } finally {
+        btnValidarAssinatura.disabled = false;
+      }
+    }
+
+    if (cpfEl) {
+      cpfEl.addEventListener("input", () => {
+        cpfEl.value = formatCpf(cpfEl.value || "");
+      });
+    }
+    if (diariaCpfEl) {
+      diariaCpfEl.addEventListener("input", () => {
+        diariaCpfEl.value = formatCpf(diariaCpfEl.value || "");
+      });
+    }
+
+    const telEl = qs("telefone");
+    if (telEl) {
+      telEl.addEventListener("input", () => {
+        telEl.value = formatPhone(telEl.value || "");
+      });
+    }
+    if (diariaTelefoneEl) {
+      diariaTelefoneEl.addEventListener("input", () => {
+        diariaTelefoneEl.value = formatPhone(diariaTelefoneEl.value || "");
+      });
+    }
+
+    fillSelect(pubComite, COMITES.map((c) => ({ value: c, label: c })), "Selecione o comitê...");
+    fillSelect(diariaComiteEl, COMITES.map((c) => ({ value: c, label: c })), "Selecione o comitê...");
+
+    if (!idReuniao) {
+      if (panelEscolha) panelEscolha.classList.remove("hidden");
+      await carregarReunioesPublicas();
+    } else {
+      if (panelEscolha) panelEscolha.classList.add("hidden");
+      const detalhe = await carregarDetalhePorId(idReuniao);
+      if (detalhe && detalhe.comite && diariaComiteEl) {
+        diariaComiteEl.value = detalhe.comite;
+        await carregarReunioesDiaria();
+        if (diariaReuniaoEl) diariaReuniaoEl.value = idReuniao;
+      }
+    }
+
+    pubComite?.addEventListener("change", async () => {
+      try {
+        if (panelNovo) panelNovo.classList.add("hidden");
+        if (panelCodigo) panelCodigo.classList.add("hidden");
+        await carregarReunioesPublicas();
+      } catch (e) {
+        setNotice("err", e.message);
+      }
+    });
+    pubReuniao?.addEventListener("change", () => {
+      syncSelectedReuniao();
+    });
+
+    diariaComiteEl?.addEventListener("change", async () => {
+      try {
+        await carregarReunioesDiaria();
+      } catch (e) {
+        setNotice("err", e.message);
+      }
+    });
+    diariaTipoParticipacaoEl?.addEventListener("change", updateDiariaUi);
+
+    btnPublicTabConfirmar?.addEventListener("click", () => setPublicTab("confirmar"));
+    btnPublicTabDiaria?.addEventListener("click", () => setPublicTab("diaria"));
+    btnPublicTabAssinatura?.addEventListener("click", () => setPublicTab("assinatura"));
+
     btnValidar?.addEventListener("click", validar);
     qs("btnSalvarNovo")?.addEventListener("click", salvarNovo);
-    updateDiariaFieldsUi();
+    btnEnviarDiaria?.addEventListener("click", salvarSolicitacaoDiaria);
+    btnValidarAssinatura?.addEventListener("click", validarAssinatura);
+
+    setPublicTab(publicTabAtual);
+    updateDiariaUi();
+    setAnexoStatus("");
   }
 
   // -------------------- Painel (index.html) --------------------
