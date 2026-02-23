@@ -202,12 +202,30 @@
   function ensureEditor() {
     return new Promise(function (resolve, reject) {
       if (window.__ATA_EDITOR__) return resolve(window.__ATA_EDITOR__);
-      if (!window.CKEDITOR || !window.CKEDITOR.ClassicEditor) {
-        return reject(new Error("Editor rico indisponível no navegador. Verifique bloqueio da CDN do CKEditor."));
+      var ClassicEditorCtor = (window.CKEDITOR && window.CKEDITOR.ClassicEditor) || window.ClassicEditor;
+      if (!ClassicEditorCtor) {
+        return reject(new Error("Editor rico indisponível no navegador. Verifique o arquivo local ./vendor/ckeditor5/ckeditor-super-build.js."));
       }
 
-      window.CKEDITOR.ClassicEditor
+      ClassicEditorCtor
         .create(qs("editorAtaFull"), {
+          removePlugins: [
+            "CKBox",
+            "CKFinder",
+            "CKFinderUploadAdapter",
+            "EasyImage",
+            "RealTimeCollaborativeComments",
+            "RealTimeCollaborativeTrackChanges",
+            "RealTimeCollaborativeRevisionHistory",
+            "PresenceList",
+            "Comments",
+            "TrackChanges",
+            "TrackChangesData",
+            "RevisionHistory",
+            "Pagination",
+            "WProofreader",
+            "MathType"
+          ],
           toolbar: {
             items: [
               "undo", "redo", "|",

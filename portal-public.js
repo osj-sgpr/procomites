@@ -10,6 +10,8 @@
 
   function getApiBaseUrls() {
     var out = [];
+    var explicitPublic = String(window.APPS_SCRIPT_PUBLIC_URL || "").trim();
+    if (explicitPublic && out.indexOf(explicitPublic) < 0) out.push(explicitPublic);
     if (Array.isArray(window.APPS_SCRIPT_URLS)) {
       window.APPS_SCRIPT_URLS.forEach(function (u) {
         var s = String(u || "").trim();
@@ -19,6 +21,17 @@
     var single = String(window.APPS_SCRIPT_URL || "").trim();
     if (single && out.indexOf(single) < 0) out.push(single);
     return out;
+  }
+
+  function buildApiUrl(base, payload, cbName) {
+    var cleanBase = String(base || "").trim();
+    var params = [];
+    params.push("acao=" + encodeURIComponent((payload && payload.acao) || ""));
+    if (cbName) params.push("callback=" + encodeURIComponent(cbName));
+    params.push("payload=" + encodeURIComponent(JSON.stringify(payload || {})));
+    params.push("_ts=" + encodeURIComponent(String(Date.now())));
+    if (!cleanBase) return "";
+    return cleanBase + (cleanBase.indexOf("?") >= 0 ? "&" : "?") + params.join("&");
   }
 
   function callJsonp(base, payload, timeoutMs) {
@@ -39,14 +52,9 @@
         resolve(data || {});
       };
 
-      var u = new URL(base);
-      u.searchParams.set("acao", payload.acao || "");
-      u.searchParams.set("callback", cb);
-      u.searchParams.set("payload", JSON.stringify(payload || {}));
-      u.searchParams.set("_ts", String(Date.now()));
-
       script = document.createElement("script");
-      script.src = u.toString();
+      script.async = true;
+      script.src = buildApiUrl(base, payload, cb);
       script.onerror = function () {
         clean();
         reject(new Error("Falha ao chamar API pública."));
@@ -55,7 +63,7 @@
       timer = setTimeout(function () {
         clean();
         reject(new Error("Timeout ao chamar API pública."));
-      }, timeoutMs || 22000);
+      }, timeoutMs || 30000);
 
       document.head.appendChild(script);
     });
@@ -67,12 +75,12 @@
 
     var lastErr = null;
     for (var i = 0; i < bases.length; i++) {
-      for (var attempt = 1; attempt <= 2; attempt++) {
+      for (var attempt = 1; attempt <= 3; attempt++) {
         try {
-          return await callJsonp(bases[i], payload || {}, 22000 + ((attempt - 1) * 6000));
+          return await callJsonp(bases[i], payload || {}, 30000 + ((attempt - 1) * 7000));
         } catch (e) {
           lastErr = e;
-          await new Promise(function (r) { setTimeout(r, 250 * attempt); });
+          await new Promise(function (r) { setTimeout(r, 450 * attempt); });
         }
       }
     }
