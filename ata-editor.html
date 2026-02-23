@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>ProComites - Editor de ATA</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="./styles.css?v=20250223a" />
+</head>
+<body>
+  <div class="site-top-bar">
+    <div class="container">
+      <header>
+        <div class="brand">
+          <h1>Editor de ATA</h1>
+          <p>Edicao ampliada em tela grande para atas das reunioes</p>
+        </div>
+      </header>
+    </div>
+  </div>
+
+  <div class="site-nav-bar">
+    <div class="container">
+      <nav>
+        <a class="nav-link" href="./index.html">Home</a>
+        <a class="nav-link" href="./noticias.html">Noticias</a>
+        <a class="nav-link" href="./comites.html">Comites</a>
+        <a class="nav-link" href="./fale-conosco.html">Fale Conosco</a>
+        <a class="nav-link active" href="./ata-editor.html">Editor de ATA</a>
+        <a class="nav-link" href="./painel.html">Painel</a>
+      </nav>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="notice" class="notice hidden"></div>
+
+    <section class="card" id="authCard">
+      <div class="row" style="justify-content: space-between; align-items: center;">
+        <div>
+          <div class="section-title">Autenticacao</div>
+          <div id="userLine" class="small">Faca login para editar a ATA.</div>
+        </div>
+        <div class="row">
+          <button id="btnLogin" class="primary">Entrar com Google</button>
+          <button id="btnLogout" class="danger hidden">Sair</button>
+          <a id="btnVoltarPainel" href="./painel.html" class="portal-nav-link">Voltar ao painel</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="editorCard" class="card hidden" style="margin-top: 14px;">
+      <div class="row" style="align-items: end;">
+        <div class="field">
+          <label>Reuniao</label>
+          <select id="ataReuniao"></select>
+        </div>
+        <button id="btnCarregarAta">Carregar ATA</button>
+      </div>
+
+      <div id="ataMeta" class="small" style="margin-top: 8px;"></div>
+
+      <div style="margin-top: 12px;">
+        <label>Conteudo da ATA</label>
+        <textarea id="editorAtaFull"></textarea>
+      </div>
+
+      <div class="row" style="margin-top: 12px; justify-content: space-between; align-items: center;">
+        <div class="row">
+          <button id="btnInserirLista">Inserir lista de presenca</button>
+          <button id="btnGerarPdfAta">Gerar PDF (rascunho)</button>
+        </div>
+        <button id="btnSalvarAta" class="primary">Salvar ATA</button>
+      </div>
+
+      <div class="row" style="margin-top: 10px; align-items: flex-end;">
+        <div class="field" style="flex: 1;">
+          <label>PDF assinado (upload)</label>
+          <input id="ataPdfAssinada" type="file" accept="application/pdf" />
+          <div id="ataUploadStatus" class="small" style="margin-top: 6px;"></div>
+        </div>
+        <button id="btnUploadAta" class="primary">Enviar e publicar</button>
+      </div>
+    </section>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          ProComites
+          <span>Portal dos Comites de Bacias Hidrograficas do Tocantins</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    window.APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPGdYJ6kYEPPDCZUaoCqyxoDvtlwQOTunvvkPP2RHjMg0TzvflUQdfMcGxE-hSTgT3/exec";
+  </script>
+  <script>
+    window.firebaseConfig = {
+      apiKey: "AIzaSyBFbAihI-At7oeWG39CTtivdV1Op3gVOxk",
+      authDomain: "sistema-procomites.firebaseapp.com",
+      projectId: "sistema-procomites",
+      storageBucket: "sistema-procomites.firebasestorage.app",
+      messagingSenderId: "310894913611",
+      appId: "1:310894913611:web:58df1816ccacb8feb5c5ce"
+    };
+  </script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://cdn.ckeditor.com/4.25.1-lts/full-all/ckeditor.js"></script>
+  <script src="./ata-editor.js?v=20250223a"></script>
+</body>
+</html>

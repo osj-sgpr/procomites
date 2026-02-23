@@ -474,6 +474,7 @@
     const panelPortalGestao = qs("panelPortalGestao");
     const btnPortalTabConfig = qs("btnPortalTabConfig");
     const btnPortalTabNoticias = qs("btnPortalTabNoticias");
+    const btnAbrirPortalConfigFull = qs("btnAbrirPortalConfigFull");
     const portalConfigTabContent = qs("portalConfigTabContent");
     const portalNoticiasTabContent = qs("portalNoticiasTabContent");
     const cfgBannerTitulo = qs("cfgBannerTitulo");
@@ -515,6 +516,7 @@
     let portalConfigAtual = null;
     let idToken = null;
     const requestedPortalTab = (getUrlParam("portalTab") || "").toLowerCase();
+    const requestedOpenReuniao = (getUrlParam("openReuniao") || "").trim();
 
     if (cadTelefone) {
       cadTelefone.addEventListener("input", () => {
@@ -1023,12 +1025,8 @@
             const btnPainel = document.createElement("button");
             btnPainel.textContent = "Abrir no painel";
             btnPainel.addEventListener("click", () => {
-              const found = (reunioes || []).find((x) => x.idReuniao === r.idReuniao);
-              if (!found) {
-                setNotice("err", "Você não tem permissão para gerenciar esta reunião no painel.");
-                return;
-              }
-              selecionarReuniao(found);
+              const url = `./painel.html?openReuniao=${encodeURIComponent(r.idReuniao || "")}`;
+              window.open(url, "_blank", "noopener");
             });
             actions.appendChild(btnPainel);
           }
@@ -1097,7 +1095,10 @@
           right.className = "row";
           const btnOpen = document.createElement("button");
           btnOpen.textContent = "Abrir";
-          btnOpen.addEventListener("click", () => selecionarReuniao(r));
+          btnOpen.addEventListener("click", () => {
+            const url = `./painel.html?openReuniao=${encodeURIComponent(r.idReuniao || "")}`;
+            window.open(url, "_blank", "noopener");
+          });
           right.appendChild(btnOpen);
 
           item.appendChild(left);
@@ -1356,6 +1357,10 @@
       }
 
       await carregarReunioes();
+      if (requestedOpenReuniao) {
+        const alvo = (reunioes || []).find((x) => x.idReuniao === requestedOpenReuniao);
+        if (alvo) await selecionarReuniao(alvo);
+      }
 
       // Admin/Presidente pode aprovar pendentes
       if (session.perfil === "Admin" || session.perfil === "Presidente") {
@@ -1520,13 +1525,27 @@
       btnRelatorio.disabled = true;
       try {
         const r = await api({ acao: "gerarRelatorioDiarias", idToken, idReuniao: reuniaoAtual.idReuniao });
-        if (r.sucesso && r.url) window.open(r.url, "_blank");
+        if (r.sucesso && r.url) {
+          window.open(r.url, "_blank");
+          if (typeof r.totalComDiaria === "number") {
+            setNotice("ok", `Relatório gerado com ${r.totalComDiaria} participante(s) com diária.`);
+          }
+        }
         else setNotice("err", r.mensagem || "Não foi possível gerar.");
       } catch (e) {
         setNotice("err", e.message);
       } finally {
         btnRelatorio.disabled = false;
       }
+    }
+
+    function abrirAtaEmNovaAba() {
+      if (!reuniaoAtual) {
+        setNotice("err", "Selecione uma reunião antes de abrir o editor de ATA.");
+        return;
+      }
+      const url = `./ata-editor.html?id=${encodeURIComponent(reuniaoAtual.idReuniao || "")}`;
+      window.open(url, "_blank", "noopener");
     }
 
     async function abrirAta() {
@@ -1748,7 +1767,7 @@
     btnConfirmar?.addEventListener("click", confirmarParticipacao);
     btnRecarregarValidacao?.addEventListener("click", carregarValidacoes);
 
-    btnAta?.addEventListener("click", abrirAta);
+    btnAta?.addEventListener("click", abrirAtaEmNovaAba);
     btnCancelarAta?.addEventListener("click", () => panelAta.classList.add("hidden"));
     btnSalvarAta?.addEventListener("click", salvarAta);
     btnInserirLista?.addEventListener("click", inserirListaPresenca);
@@ -1757,8 +1776,11 @@
     btnSalvarPortalConfig?.addEventListener("click", salvarConfigPortal);
     btnPortalTabConfig?.addEventListener("click", () => setPortalTab("config"));
     btnPortalTabNoticias?.addEventListener("click", () => setPortalTab("noticias"));
+    btnAbrirPortalConfigFull?.addEventListener("click", () => {
+      window.open("./portal-config-editor.html", "_blank", "noopener");
+    });
     btnNovaNoticia?.addEventListener("click", async () => {
-      window.location.href = "./noticia-editor.html";
+      window.open("./noticia-editor.html", "_blank", "noopener");
     });
     btnSalvarNoticia?.addEventListener("click", salvarNoticiaPortal);
     btnCancelarNoticia?.addEventListener("click", () => {

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>ProComites - Configuracoes do Portal</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="./styles.css?v=20250223a" />
+</head>
+<body>
+  <div class="site-top-bar">
+    <div class="container">
+      <header>
+        <div class="brand">
+          <h1>Configuracoes do Portal</h1>
+          <p>Edicao ampliada da Home e Fale Conosco</p>
+        </div>
+      </header>
+    </div>
+  </div>
+
+  <div class="site-nav-bar">
+    <div class="container">
+      <nav>
+        <a class="nav-link" href="./index.html">Home</a>
+        <a class="nav-link" href="./noticias.html">Noticias</a>
+        <a class="nav-link" href="./comites.html">Comites</a>
+        <a class="nav-link" href="./fale-conosco.html">Fale Conosco</a>
+        <a class="nav-link active" href="./portal-config-editor.html">Config Portal</a>
+        <a class="nav-link" href="./painel.html">Painel</a>
+      </nav>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="notice" class="notice hidden"></div>
+
+    <section class="card" id="authCard">
+      <div class="row" style="justify-content: space-between; align-items: center;">
+        <div>
+          <div class="section-title">Autenticacao</div>
+          <div id="userLine" class="small">Faca login para editar as configuracoes.</div>
+        </div>
+        <div class="row">
+          <button id="btnLogin" class="primary">Entrar com Google</button>
+          <button id="btnLogout" class="danger hidden">Sair</button>
+          <a href="./painel.html?portalTab=config" class="portal-nav-link">Voltar ao painel</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="editorCard" class="card hidden" style="margin-top: 14px;">
+      <div style="font-weight: 700; margin-bottom: 8px;">Home - Banner principal</div>
+      <div class="row">
+        <div class="field">
+          <label>Titulo</label>
+          <input id="cfgBannerTitulo" placeholder="Titulo do banner" />
+        </div>
+        <div class="field">
+          <label>Subtitulo</label>
+          <input id="cfgBannerSubtitulo" placeholder="Subtitulo institucional" />
+        </div>
+      </div>
+      <div class="row" style="margin-top: 10px;">
+        <div class="field">
+          <label>URL da imagem do banner</label>
+          <input id="cfgBannerImagem" placeholder="https://..." />
+        </div>
+        <div class="field">
+          <label>Texto do botao</label>
+          <input id="cfgBannerBotaoTexto" placeholder="Saiba mais" />
+        </div>
+        <div class="field">
+          <label>URL do botao</label>
+          <input id="cfgBannerBotaoUrl" placeholder="https://..." />
+        </div>
+      </div>
+
+      <div style="font-weight: 700; margin: 14px 0 8px;">Ajustes de texto da Home</div>
+      <div class="row">
+        <div class="field">
+          <label>Texto superior</label>
+          <input id="cfgBannerChapeu" placeholder="Portal Oficial" />
+        </div>
+        <div class="field">
+          <label>Tamanho do titulo (px)</label>
+          <input id="cfgBannerTituloSize" type="number" min="20" max="60" placeholder="Auto" />
+        </div>
+      </div>
+      <div class="row" style="margin-top: 10px;">
+        <div class="field">
+          <label>Tamanho do subtitulo (px)</label>
+          <input id="cfgBannerSubtituloSize" type="number" min="14" max="36" placeholder="Auto" />
+        </div>
+        <div class="field">
+          <label>Tamanho do botao (px)</label>
+          <input id="cfgBannerBotaoSize" type="number" min="12" max="26" placeholder="Auto" />
+        </div>
+      </div>
+
+      <div style="font-weight: 700; margin: 14px 0 8px;">Fale Conosco</div>
+      <div class="row">
+        <div class="field">
+          <label>Titulo</label>
+          <input id="cfgContatoTitulo" placeholder="Fale Conosco" />
+        </div>
+        <div class="field">
+          <label>Texto</label>
+          <input id="cfgContatoTexto" placeholder="Texto de apoio" />
+        </div>
+      </div>
+      <div class="row" style="margin-top: 10px;">
+        <div class="field">
+          <label>Email</label>
+          <input id="cfgContatoEmail" placeholder="contato@..." />
+        </div>
+        <div class="field">
+          <label>Telefone</label>
+          <input id="cfgContatoTelefone" placeholder="(63) ..." />
+        </div>
+        <div class="field">
+          <label>Endereco</label>
+          <input id="cfgContatoEndereco" placeholder="Palmas - TO" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top: 12px; justify-content: flex-end;">
+        <button id="btnSalvarPortalConfig" class="primary">Salvar configuracoes</button>
+      </div>
+    </section>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          ProComites
+          <span>Portal dos Comites de Bacias Hidrograficas do Tocantins</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    window.APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPGdYJ6kYEPPDCZUaoCqyxoDvtlwQOTunvvkPP2RHjMg0TzvflUQdfMcGxE-hSTgT3/exec";
+  </script>
+  <script>
+    window.firebaseConfig = {
+      apiKey: "AIzaSyBFbAihI-At7oeWG39CTtivdV1Op3gVOxk",
+      authDomain: "sistema-procomites.firebaseapp.com",
+      projectId: "sistema-procomites",
+      storageBucket: "sistema-procomites.firebasestorage.app",
+      messagingSenderId: "310894913611",
+      appId: "1:310894913611:web:58df1816ccacb8feb5c5ce"
+    };
+  </script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="./portal-config-editor.js?v=20250223a"></script>
+</body>
+</html>
