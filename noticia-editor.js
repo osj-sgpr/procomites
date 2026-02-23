@@ -33,33 +33,39 @@
     return msg.indexOf("ação inválida: " + a) >= 0 || msg.indexOf("acao invalida: " + a) >= 0;
   }
 
-  function loadScriptOnce(src) {
-    return new Promise(function (resolve, reject) {
-      var existing = document.querySelector("script[src='" + src + "']");
-      if (existing) {
-        if (window.CKEDITOR) return resolve();
-        existing.addEventListener("load", function () { resolve(); }, { once: true });
-        existing.addEventListener("error", function () { reject(new Error("Falha ao carregar script do editor.")); }, { once: true });
-        return;
-      }
-      var s = document.createElement("script");
-      s.src = src;
-      s.onload = function () { resolve(); };
-      s.onerror = function () { reject(new Error("Falha ao carregar script do editor.")); };
-      document.head.appendChild(s);
-    });
-  }
+  function buildTiptapExtensions_() {
+    var exts = window.tiptapExtensions || {};
+    var list = [];
 
-  async function ensureCkeditorGlobal() {
-    if (window.CKEDITOR) return;
-    try {
-      await loadScriptOnce("https://cdn.ckeditor.com/4.25.1-lts/full-all/ckeditor.js");
-    } catch (e) {
-      await loadScriptOnce("https://cdnjs.cloudflare.com/ajax/libs/ckeditor/4.25.1-lts/ckeditor.js");
+    function add(name, opts) {
+      var Ctor = exts[name];
+      if (!Ctor) return;
+      list.push(new Ctor(opts || {}));
     }
-    if (!window.CKEDITOR) {
-      throw new Error("Editor rico indisponível no navegador. Verifique bloqueio de CDN/rede.");
-    }
+
+    add("History");
+    add("Doc");
+    add("Text");
+    add("Paragraph");
+    add("Heading", { levels: [2, 3] });
+    add("Bold");
+    add("Italic");
+    add("Underline");
+    add("Strike");
+    add("Blockquote");
+    add("OrderedList");
+    add("BulletList");
+    add("ListItem");
+    add("HorizontalRule");
+    add("Link", { openOnClick: false });
+    add("Image", { inline: false });
+    add("Table", { resizable: true });
+    add("TableHeader");
+    add("TableCell");
+    add("TableRow");
+    add("TextAlign", { types: ["heading", "paragraph"] });
+
+    return list;
   }
 
   function api(payload) {
@@ -181,39 +187,84 @@
     });
   }
 
-  function ensureEditor() {
-    return new Promise(function (resolve) {
-      if (state.editor) return resolve(state.editor);
-      state.editor = window.CKEDITOR.replace("editorConteudo", {
-        height: 520,
-        extraPlugins: "justify,colorbutton,font,stylescombo",
-        removeButtons: "Subscript,Superscript",
-        contentsCss: ["./styles.css?v=20260222k"],
-        toolbar: [
-          { name: "clipboard", items: ["Undo", "Redo"] },
-          { name: "styles", items: ["Styles", "Format", "Font", "FontSize"] },
-          { name: "basicstyles", items: ["Bold", "Italic", "Underline", "Strike", "TextColor", "BGColor", "RemoveFormat"] },
-          { name: "paragraph", items: ["NumberedList", "BulletedList", "Outdent", "Indent", "Blockquote", "JustifyLeft", "JustifyCenter", "JustifyRight", "JustifyBlock"] },
-          { name: "links", items: ["Link", "Unlink"] },
-          { name: "insert", items: ["Table", "HorizontalRule", "SpecialChar"] },
-          { name: "document", items: ["Source"] }
-        ]
+  function bindNewsToolbarCommands_(editor) {
+    var buttons = document.querySelectorAll("[data-editor-target='news'][data-cmd]");
+    buttons.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var cmd = (btn.getAttribute("data-cmd") || "").trim();
+        if (!cmd) return;
+        editor.focus();
+        if (cmd === "undo") return editor.commands.undo();
+        if (cmd === "redo") return editor.commands.redo();
+        if (cmd === "h2") return editor.commands.heading({ level: 2 });
+        if (cmd === "h3") return editor.commands.heading({ level: 3 });
+        if (cmd === "bold") return editor.commands.bold();
+        if (cmd === "italic") return editor.commands.italic();
+        if (cmd === "underline") return editor.commands.underline();
+        if (cmd === "strike") return editor.commands.strike();
+        if (cmd === "bulletList") return editor.commands.bullet_list();
+        if (cmd === "orderedList") return editor.commands.ordered_list();
+        if (cmd === "blockquote") return editor.commands.blockquote();
+        if (cmd === "horizontalRule") return editor.commands.horizontal_rule();
+        if (cmd === "link") {
+          var href = window.prompt("Informe a URL do link:", "https://");
+          if (!href) return;
+          return editor.commands.link({ href: href });
+        }
+        if (cmd === "image") {
+          var src = window.prompt("Informe a URL da imagem:", "https://");
+          if (!src) return;
+          return editor.commands.image({ src: src });
+        }
+        if (cmd === "table") return editor.commands.create_table({ rowsCount: 3, colsCount: 3, withHeaderRow: true });
       });
-      state.editor.on("instanceReady", function () { resolve(state.editor); });
     });
   }
 
-  function applyParagraphStyle(lineHeight, marginBottom) {
-    if (!state.editor) return;
-    state.editor.focus();
-    var style = new CKEDITOR.style({
-      element: "p",
-      styles: {
-        "line-height": String(lineHeight),
-        "margin-bottom": marginBottom + "px"
+  function ensureEditor() {
+    return new Promise(function (resolve, reject) {
+      if (state.editor) return resolve(state.editor);
+      if (!window.tiptap || !window.tiptap.Editor || !window.tiptapExtensions) {
+        return reject(new Error("Tiptap indisponível no navegador. Verifique bloqueio de CDN/rede."));
       }
+
+      var editor = new window.tiptap.Editor({
+        element: qs("editorConteudo"),
+        extensions: buildTiptapExtensions_(),
+        content: "<p>Digite a notícia...</p>",
+        editorProps: {
+          attributes: {
+            class: "tiptap-prose"
+          }
+        }
+      });
+
+      bindNewsToolbarCommands_(editor);
+      state.editor = {
+        setData: function (html) {
+          editor.setContent(html || "<p>Digite a notícia...</p>");
+        },
+        getData: function () {
+          return editor.getHTML();
+        },
+        insertHtml: function (html) {
+          editor.commands.insertHTML(String(html || ""));
+        },
+        focus: function () {
+          editor.focus();
+        },
+        __raw: editor
+      };
+      resolve(state.editor);
     });
-    state.editor.applyStyle(style);
+  }
+
+  function applyParagraphStyle(mode) {
+    if (!state.editor || !state.editor.__raw || !state.editor.__raw.view || !state.editor.__raw.view.dom) return;
+    var root = state.editor.__raw.view.dom;
+    root.classList.remove("is-spacing-normal", "is-spacing-comfortable");
+    if (mode === "comfortable") root.classList.add("is-spacing-comfortable");
+    else root.classList.add("is-spacing-normal");
   }
 
   function setDefaultForm() {
@@ -376,7 +427,6 @@
         }
 
         editorCard.classList.remove("hidden");
-        await ensureCkeditorGlobal();
         await ensureEditor();
         await loadNoticiaIfNeeded();
       } catch (e) {
@@ -398,22 +448,22 @@
     qs("btnSalvarNoticia").addEventListener("click", saveNoticia);
 
     qs("btnJustify").addEventListener("click", function () {
-      if (state.editor) state.editor.execCommand("justifyblock");
+      if (state.editor && state.editor.__raw) state.editor.__raw.commands.text_align({ alignment: "justify" });
     });
     qs("btnAlignLeft").addEventListener("click", function () {
-      if (state.editor) state.editor.execCommand("justifyleft");
+      if (state.editor && state.editor.__raw) state.editor.__raw.commands.text_align({ alignment: "left" });
     });
     qs("btnAlignCenter").addEventListener("click", function () {
-      if (state.editor) state.editor.execCommand("justifycenter");
+      if (state.editor && state.editor.__raw) state.editor.__raw.commands.text_align({ alignment: "center" });
     });
     qs("btnAlignRight").addEventListener("click", function () {
-      if (state.editor) state.editor.execCommand("justifyright");
+      if (state.editor && state.editor.__raw) state.editor.__raw.commands.text_align({ alignment: "right" });
     });
     qs("btnSpaceNormal").addEventListener("click", function () {
-      applyParagraphStyle(1.5, 10);
+      applyParagraphStyle("normal");
     });
     qs("btnSpaceConfortavel").addEventListener("click", function () {
-      applyParagraphStyle(1.9, 18);
+      applyParagraphStyle("comfortable");
     });
   }
 

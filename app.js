@@ -1089,9 +1089,9 @@
 
           if (session) {
             const btnPainel = document.createElement("button");
-            btnPainel.textContent = "Abrir no painel";
+            btnPainel.textContent = "Abrir reunião";
             btnPainel.addEventListener("click", () => {
-              const url = `./painel.html?openReuniao=${encodeURIComponent(r.idReuniao || "")}`;
+              const url = `./ata-editor.html?id=${encodeURIComponent(r.idReuniao || "")}`;
               window.open(url, "_blank", "noopener");
             });
             actions.appendChild(btnPainel);
@@ -1162,7 +1162,7 @@
           const btnOpen = document.createElement("button");
           btnOpen.textContent = "Abrir";
           btnOpen.addEventListener("click", () => {
-            const url = `./painel.html?openReuniao=${encodeURIComponent(r.idReuniao || "")}`;
+            const url = `./ata-editor.html?id=${encodeURIComponent(r.idReuniao || "")}`;
             window.open(url, "_blank", "noopener");
           });
           right.appendChild(btnOpen);

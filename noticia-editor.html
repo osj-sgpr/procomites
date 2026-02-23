@@ -8,7 +8,7 @@
   <meta http-equiv="Expires" content="0" />
   <title>ProComitês - Editor de Notícia</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="./styles.css?v=20250223a" />
+  <link rel="stylesheet" href="./styles.css?v=20260223c" />
 </head>
 <body>
 
@@ -105,6 +105,21 @@
           <div style="margin-top: 12px;">
             <label>Conteúdo da notícia</label>
             <div class="editor-tools-row">
+              <button type="button" data-editor-target="news" data-cmd="undo">Desfazer</button>
+              <button type="button" data-editor-target="news" data-cmd="redo">Refazer</button>
+              <button type="button" data-editor-target="news" data-cmd="h2">Título</button>
+              <button type="button" data-editor-target="news" data-cmd="h3">Subtítulo</button>
+              <button type="button" data-editor-target="news" data-cmd="bold"><b>Negrito</b></button>
+              <button type="button" data-editor-target="news" data-cmd="italic"><i>Itálico</i></button>
+              <button type="button" data-editor-target="news" data-cmd="underline"><u>Sublinhado</u></button>
+              <button type="button" data-editor-target="news" data-cmd="strike"><s>Tachado</s></button>
+              <button type="button" data-editor-target="news" data-cmd="bulletList">Lista</button>
+              <button type="button" data-editor-target="news" data-cmd="orderedList">Numeração</button>
+              <button type="button" data-editor-target="news" data-cmd="blockquote">Citação</button>
+              <button type="button" data-editor-target="news" data-cmd="horizontalRule">Linha</button>
+              <button type="button" data-editor-target="news" data-cmd="link">Link</button>
+              <button type="button" data-editor-target="news" data-cmd="image">Imagem</button>
+              <button type="button" data-editor-target="news" data-cmd="table">Tabela</button>
               <button type="button" id="btnJustify" title="Justificado">Justificar</button>
               <button type="button" id="btnAlignLeft" title="Alinhar à esquerda">Esquerda</button>
               <button type="button" id="btnAlignCenter" title="Centralizar">Centro</button>
@@ -112,7 +127,7 @@
               <button type="button" id="btnSpaceNormal">Espaço normal</button>
               <button type="button" id="btnSpaceConfortavel">Espaço confortável</button>
             </div>
-            <textarea id="editorConteudo"></textarea>
+            <div id="editorConteudo" class="tiptap-surface"></div>
           </div>
 
           <div class="row" style="margin-top: 12px; justify-content: flex-end;">
@@ -169,7 +184,8 @@
 
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://cdn.ckeditor.com/4.25.1-lts/full-all/ckeditor.js"></script>
-  <script src="./noticia-editor.js?v=20260222b"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tiptap@1.35.0/dist/tiptap.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tiptap-extensions@1.35.0/dist/extensions.umd.min.js"></script>
+  <script src="./noticia-editor.js?v=20260223c"></script>
 </body>
 </html>

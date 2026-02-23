@@ -8,9 +8,9 @@
   <meta http-equiv="Expires" content="0" />
   <title>ProComites - Editor de ATA</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="./styles.css?v=20250223a" />
+  <link rel="stylesheet" href="./styles.css?v=20260223c" />
 </head>
-<body>
+<body class="ata-editor-page">
   <div class="site-top-bar">
     <div class="container">
       <header>
@@ -69,7 +69,28 @@
 
       <div style="margin-top: 12px;">
         <label>Conteudo da ATA</label>
-        <textarea id="editorAtaFull"></textarea>
+        <div class="editor-tools-row" style="margin-top: 8px;">
+          <button type="button" data-editor-target="ata" data-cmd="undo">Desfazer</button>
+          <button type="button" data-editor-target="ata" data-cmd="redo">Refazer</button>
+          <button type="button" data-editor-target="ata" data-cmd="h2">Título</button>
+          <button type="button" data-editor-target="ata" data-cmd="h3">Subtítulo</button>
+          <button type="button" data-editor-target="ata" data-cmd="bold"><b>Negrito</b></button>
+          <button type="button" data-editor-target="ata" data-cmd="italic"><i>Itálico</i></button>
+          <button type="button" data-editor-target="ata" data-cmd="underline"><u>Sublinhado</u></button>
+          <button type="button" data-editor-target="ata" data-cmd="strike"><s>Tachado</s></button>
+          <button type="button" data-editor-target="ata" data-cmd="bulletList">Lista</button>
+          <button type="button" data-editor-target="ata" data-cmd="orderedList">Numeração</button>
+          <button type="button" data-editor-target="ata" data-cmd="blockquote">Citação</button>
+          <button type="button" data-editor-target="ata" data-cmd="horizontalRule">Linha</button>
+          <button type="button" data-editor-target="ata" data-cmd="link">Link</button>
+          <button type="button" data-editor-target="ata" data-cmd="image">Imagem</button>
+          <button type="button" data-editor-target="ata" data-cmd="table">Tabela</button>
+          <button type="button" data-editor-target="ata" data-cmd="alignLeft">Esquerda</button>
+          <button type="button" data-editor-target="ata" data-cmd="alignCenter">Centro</button>
+          <button type="button" data-editor-target="ata" data-cmd="alignRight">Direita</button>
+          <button type="button" data-editor-target="ata" data-cmd="alignJustify">Justificar</button>
+        </div>
+        <div id="editorAtaFull" class="tiptap-surface"></div>
       </div>
 
       <div class="row" style="margin-top: 12px; justify-content: space-between; align-items: center;">
@@ -119,7 +140,8 @@
 
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://cdn.ckeditor.com/4.25.1-lts/full-all/ckeditor.js"></script>
-  <script src="./ata-editor.js?v=20260222b"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tiptap@1.35.0/dist/tiptap.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tiptap-extensions@1.35.0/dist/extensions.umd.min.js"></script>
+  <script src="./ata-editor.js?v=20260223c"></script>
 </body>
 </html>

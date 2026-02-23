@@ -33,33 +33,39 @@
     return msg.indexOf("acao invalida: " + a) >= 0 || msg.indexOf("acao inv") >= 0;
   }
 
-  function loadScriptOnce(src) {
-    return new Promise(function (resolve, reject) {
-      var existing = document.querySelector("script[src='" + src + "']");
-      if (existing) {
-        if (window.CKEDITOR) return resolve();
-        existing.addEventListener("load", function () { resolve(); }, { once: true });
-        existing.addEventListener("error", function () { reject(new Error("Falha ao carregar script do editor.")); }, { once: true });
-        return;
-      }
-      var s = document.createElement("script");
-      s.src = src;
-      s.onload = function () { resolve(); };
-      s.onerror = function () { reject(new Error("Falha ao carregar script do editor.")); };
-      document.head.appendChild(s);
-    });
-  }
+  function buildTiptapExtensions_() {
+    var exts = window.tiptapExtensions || {};
+    var list = [];
 
-  async function ensureCkeditorGlobal() {
-    if (window.CKEDITOR) return;
-    try {
-      await loadScriptOnce("https://cdn.ckeditor.com/4.25.1-lts/full-all/ckeditor.js");
-    } catch (e) {
-      await loadScriptOnce("https://cdnjs.cloudflare.com/ajax/libs/ckeditor/4.25.1-lts/ckeditor.js");
+    function add(name, opts) {
+      var Ctor = exts[name];
+      if (!Ctor) return;
+      list.push(new Ctor(opts || {}));
     }
-    if (!window.CKEDITOR) {
-      throw new Error("Editor rico indisponivel no navegador. Verifique bloqueio de CDN/rede.");
-    }
+
+    add("History");
+    add("Doc");
+    add("Text");
+    add("Paragraph");
+    add("Heading", { levels: [2, 3] });
+    add("Bold");
+    add("Italic");
+    add("Underline");
+    add("Strike");
+    add("Blockquote");
+    add("OrderedList");
+    add("BulletList");
+    add("ListItem");
+    add("HorizontalRule");
+    add("Link", { openOnClick: false });
+    add("Image", { inline: false });
+    add("Table", { resizable: true });
+    add("TableHeader");
+    add("TableCell");
+    add("TableRow");
+    add("TextAlign", { types: ["heading", "paragraph"] });
+
+    return list;
   }
 
   function api(payload) {
@@ -110,25 +116,82 @@
     });
   }
 
-  function ensureEditor() {
-    return new Promise(function (resolve) {
-      if (window.__ATA_EDITOR__) return resolve(window.__ATA_EDITOR__);
-      window.__ATA_EDITOR__ = window.CKEDITOR.replace("editorAtaFull", {
-        height: 560,
-        extraPlugins: "justify,colorbutton,font,stylescombo",
-        removeButtons: "Subscript,Superscript",
-        contentsCss: ["./styles.css?v=20250223a"],
-        toolbar: [
-          { name: "clipboard", items: ["Undo", "Redo"] },
-          { name: "styles", items: ["Styles", "Format", "Font", "FontSize"] },
-          { name: "basicstyles", items: ["Bold", "Italic", "Underline", "Strike", "TextColor", "BGColor", "RemoveFormat"] },
-          { name: "paragraph", items: ["NumberedList", "BulletedList", "Outdent", "Indent", "Blockquote", "JustifyLeft", "JustifyCenter", "JustifyRight", "JustifyBlock"] },
-          { name: "links", items: ["Link", "Unlink"] },
-          { name: "insert", items: ["Image", "Table", "HorizontalRule", "SpecialChar"] },
-          { name: "document", items: ["Source", "Maximize"] }
-        ]
+  function bindAtaToolbarCommands_(editor) {
+    var buttons = document.querySelectorAll("[data-editor-target='ata'][data-cmd]");
+    buttons.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var cmd = (btn.getAttribute("data-cmd") || "").trim();
+        if (!cmd) return;
+        editor.focus();
+        if (cmd === "undo") return editor.commands.undo();
+        if (cmd === "redo") return editor.commands.redo();
+        if (cmd === "h2") return editor.commands.heading({ level: 2 });
+        if (cmd === "h3") return editor.commands.heading({ level: 3 });
+        if (cmd === "bold") return editor.commands.bold();
+        if (cmd === "italic") return editor.commands.italic();
+        if (cmd === "underline") return editor.commands.underline();
+        if (cmd === "strike") return editor.commands.strike();
+        if (cmd === "bulletList") return editor.commands.bullet_list();
+        if (cmd === "orderedList") return editor.commands.ordered_list();
+        if (cmd === "blockquote") return editor.commands.blockquote();
+        if (cmd === "horizontalRule") return editor.commands.horizontal_rule();
+        if (cmd === "alignLeft") return editor.commands.text_align({ alignment: "left" });
+        if (cmd === "alignCenter") return editor.commands.text_align({ alignment: "center" });
+        if (cmd === "alignRight") return editor.commands.text_align({ alignment: "right" });
+        if (cmd === "alignJustify") return editor.commands.text_align({ alignment: "justify" });
+        if (cmd === "link") {
+          var href = window.prompt("Informe a URL do link:", "https://");
+          if (!href) return;
+          return editor.commands.link({ href: href });
+        }
+        if (cmd === "image") {
+          var src = window.prompt("Informe a URL da imagem:", "https://");
+          if (!src) return;
+          return editor.commands.image({ src: src });
+        }
+        if (cmd === "table") return editor.commands.create_table({ rowsCount: 3, colsCount: 3, withHeaderRow: true });
       });
-      window.__ATA_EDITOR__.on("instanceReady", function () { resolve(window.__ATA_EDITOR__); });
+    });
+  }
+
+  function ensureEditor() {
+    return new Promise(function (resolve, reject) {
+      if (window.__ATA_EDITOR__) return resolve(window.__ATA_EDITOR__);
+      if (!window.tiptap || !window.tiptap.Editor || !window.tiptapExtensions) {
+        return reject(new Error("Tiptap indisponivel no navegador. Verifique bloqueio de CDN/rede."));
+      }
+
+      var editor = new window.tiptap.Editor({
+        element: qs("editorAtaFull"),
+        extensions: buildTiptapExtensions_(),
+        content: "<p>Digite a ATA aqui...</p>",
+        editorProps: {
+          attributes: {
+            class: "tiptap-prose"
+          }
+        }
+      });
+
+      bindAtaToolbarCommands_(editor);
+      window.__ATA_EDITOR__ = {
+        setData: function (html) {
+          editor.setContent(html || "<p>Digite a ATA aqui...</p>");
+        },
+        getData: function () {
+          return editor.getHTML();
+        },
+        insertHtml: function (html) {
+          var extra = String(html || "");
+          if (!extra) return;
+          if (editor.commands.insertHTML) return editor.commands.insertHTML(extra);
+          editor.setContent((editor.getHTML() || "") + extra);
+        },
+        focus: function () {
+          editor.focus();
+        },
+        __raw: editor
+      };
+      resolve(window.__ATA_EDITOR__);
     });
   }
 
@@ -244,7 +307,17 @@
       return;
     }
     var r = state.reuniaoAtual;
-    el.textContent = "Reuniao: " + (r.titulo || "-") + " | " + fmtDate(r.data) + " | " + (r.comite || "-") + " | Status: " + (r.status || "-");
+    var tipo = (r.tipo || "-").toString().trim();
+    var local = (r.local || "-").toString().trim();
+    var localLabel = tipo.toLowerCase() === "online" ? "Link da reuniao" : "Local da reuniao";
+    el.innerHTML = ""
+      + "<strong>Reuniao:</strong> " + (r.titulo || "-")
+      + " &nbsp;•&nbsp; <strong>Data:</strong> " + fmtDate(r.data)
+      + " &nbsp;•&nbsp; <strong>Comite:</strong> " + (r.comite || "-")
+      + " &nbsp;•&nbsp; <strong>Status:</strong> " + (r.status || "-")
+      + "<br/><strong>Tipo:</strong> " + tipo
+      + " &nbsp;•&nbsp; <strong>" + localLabel + ":</strong> " + local
+      + "<br/><strong>ID:</strong> " + (r.idReuniao || "-");
 
     var link = qs("btnVoltarPainel");
     if (link) link.href = "./painel.html?openReuniao=" + encodeURIComponent(r.idReuniao || "");
@@ -416,7 +489,6 @@
     qs("userLine").textContent = (user.displayName || "") + " - " + (user.email || "") + " - " + (state.session.perfil || "");
     qs("editorCard").classList.remove("hidden");
 
-    await ensureCkeditorGlobal();
     await ensureEditor();
     await carregarReunioes();
     if (state.reuniaoAtual) await carregarAta();

@@ -532,6 +532,54 @@ hr {
   margin: 8px 0 10px;
 }
 
+.tiptap-surface {
+  min-height: 520px;
+  border: 1px solid rgba(15,23,42,0.14);
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 12px 14px;
+}
+
+.tiptap-prose {
+  min-height: 490px;
+  outline: none;
+  color: #0f172a;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.tiptap-prose p { margin: 0 0 12px; }
+.tiptap-prose h2 { margin: 18px 0 10px; font-size: 26px; }
+.tiptap-prose h3 { margin: 16px 0 10px; font-size: 20px; }
+.tiptap-prose ul,
+.tiptap-prose ol { margin: 0 0 12px; padding-left: 24px; }
+.tiptap-prose blockquote {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-left: 4px solid rgba(3,105,161,0.35);
+  background: rgba(3,105,161,0.05);
+}
+.tiptap-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 12px;
+}
+.tiptap-prose table td,
+.tiptap-prose table th {
+  border: 1px solid var(--border);
+  padding: 10px;
+}
+.tiptap-prose.is-spacing-normal p { line-height: 1.6; margin-bottom: 10px; }
+.tiptap-prose.is-spacing-comfortable p { line-height: 1.9; margin-bottom: 18px; }
+
+body.ata-editor-page .container {
+  width: min(1600px, calc(100% - 36px));
+}
+
+body.ata-editor-page #editorCard .field {
+  min-width: 260px;
+}
+
 .emoji-list {
   display: flex;
   flex-wrap: wrap;
