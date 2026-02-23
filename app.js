@@ -14,22 +14,25 @@
     el.classList.add(kind === "ok" ? "ok" : kind === "err" ? "err" : "");
   }
 
-  function api(payload) {
-    const base = window.APPS_SCRIPT_URL || (typeof APPS_SCRIPT_URL !== "undefined" ? APPS_SCRIPT_URL : "");
-    if (!base) return Promise.reject(new Error("APPS_SCRIPT_URL não configurada."));
-
-    if (payload && payload.acao !== "login") {
-      const sid = window.__SID__;
-      if (sid) {
-        payload.sid = sid;
-        if (payload.idToken) delete payload.idToken;
-      }
+  function getApiBaseUrls() {
+    const out = [];
+    if (Array.isArray(window.APPS_SCRIPT_URLS)) {
+      window.APPS_SCRIPT_URLS.forEach((u) => {
+        const s = String(u || "").trim();
+        if (s && out.indexOf(s) === -1) out.push(s);
+      });
     }
+    const single = window.APPS_SCRIPT_URL || (typeof APPS_SCRIPT_URL !== "undefined" ? APPS_SCRIPT_URL : "");
+    if (single && out.indexOf(single) === -1) out.push(single);
+    return out;
+  }
 
+  function callJsonp(base, payload, timeoutMs) {
     return new Promise((resolve, reject) => {
       const cb = "__cb_" + Math.random().toString(36).slice(2);
-      const timeoutMs = 25000;
 
+      let script;
+      let timer;
       const clean = () => {
         try { delete window[cb]; } catch (e) { window[cb] = undefined; }
         if (script && script.parentNode) script.parentNode.removeChild(script);
@@ -48,20 +51,48 @@
       u.searchParams.set("payload", JSON.stringify(payload));
       u.searchParams.set("_ts", String(Date.now()));
 
-      const script = document.createElement("script");
+      script = document.createElement("script");
       script.src = u.toString();
       script.onerror = () => {
         clean();
         reject(new Error("Falha ao chamar API (JSONP)."));
       };
 
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         clean();
         reject(new Error("Timeout ao chamar API."));
-      }, timeoutMs);
+      }, timeoutMs || 25000);
 
       document.head.appendChild(script);
     });
+  }
+
+  async function api(payload) {
+    const bases = getApiBaseUrls();
+    if (!bases.length) return Promise.reject(new Error("APPS_SCRIPT_URL não configurada."));
+
+    if (payload && payload.acao !== "login") {
+      const sid = window.__SID__;
+      if (sid) {
+        payload.sid = sid;
+        if (payload.idToken) delete payload.idToken;
+      }
+    }
+
+    let lastErr = null;
+    for (let i = 0; i < bases.length; i++) {
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          return await callJsonp(bases[i], payload, 25000 + (attempt - 1) * 5000);
+        } catch (e) {
+          lastErr = e;
+          await new Promise((r) => setTimeout(r, 250 * attempt));
+        }
+      }
+    }
+
+    const msg = (lastErr && lastErr.message) ? lastErr.message : "Falha ao chamar API (JSONP).";
+    throw new Error(msg + " Verifique rede/conectividade e se o Web App do Apps Script está publicado para acesso público.");
   }
 
   function getUrlParam(name) {

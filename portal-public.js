@@ -8,10 +8,20 @@
     return d.toLocaleDateString("pt-BR", { timeZone: "UTC" });
   }
 
-  function api(payload) {
-    var base = window.APPS_SCRIPT_URL || "";
-    if (!base) return Promise.reject(new Error("APPS_SCRIPT_URL não configurada."));
+  function getApiBaseUrls() {
+    var out = [];
+    if (Array.isArray(window.APPS_SCRIPT_URLS)) {
+      window.APPS_SCRIPT_URLS.forEach(function (u) {
+        var s = String(u || "").trim();
+        if (s && out.indexOf(s) < 0) out.push(s);
+      });
+    }
+    var single = String(window.APPS_SCRIPT_URL || "").trim();
+    if (single && out.indexOf(single) < 0) out.push(single);
+    return out;
+  }
 
+  function callJsonp(base, payload, timeoutMs) {
     return new Promise(function (resolve, reject) {
       var cb = "__cb_pub_" + Math.random().toString(36).slice(2);
       var timer = null;
@@ -45,10 +55,30 @@
       timer = setTimeout(function () {
         clean();
         reject(new Error("Timeout ao chamar API pública."));
-      }, 20000);
+      }, timeoutMs || 22000);
 
       document.head.appendChild(script);
     });
+  }
+
+  async function api(payload) {
+    var bases = getApiBaseUrls();
+    if (!bases.length) return Promise.reject(new Error("APPS_SCRIPT_URL não configurada."));
+
+    var lastErr = null;
+    for (var i = 0; i < bases.length; i++) {
+      for (var attempt = 1; attempt <= 2; attempt++) {
+        try {
+          return await callJsonp(bases[i], payload || {}, 22000 + ((attempt - 1) * 6000));
+        } catch (e) {
+          lastErr = e;
+          await new Promise(function (r) { setTimeout(r, 250 * attempt); });
+        }
+      }
+    }
+
+    var msg = (lastErr && lastErr.message) ? lastErr.message : "Falha ao chamar API pública.";
+    throw new Error(msg + " Verifique rede/conectividade e publicação do Apps Script para acesso público.");
   }
 
   function getComites() {

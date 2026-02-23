@@ -33,50 +33,60 @@
     return msg.indexOf("acao invalida: " + a) >= 0 || msg.indexOf("acao inv") >= 0;
   }
 
-  function buildTiptapExtensions_() {
-    var exts = window.tiptapExtensions || {};
-    var list = [];
-
-    function add(name, opts) {
-      var Ctor = exts[name];
-      if (!Ctor) return;
-      list.push(new Ctor(opts || {}));
-    }
-
-    add("History");
-    add("Doc");
-    add("Text");
-    add("Paragraph");
-    add("Heading", { levels: [2, 3] });
-    add("Bold");
-    add("Italic");
-    add("Underline");
-    add("Strike");
-    add("Blockquote");
-    add("OrderedList");
-    add("BulletList");
-    add("ListItem");
-    add("HorizontalRule");
-    add("Link", { openOnClick: false });
-    add("Image", { inline: false });
-    add("Table", { resizable: true });
-    add("TableHeader");
-    add("TableCell");
-    add("TableRow");
-    add("TextAlign", { types: ["heading", "paragraph"] });
-
-    return list;
+  function ckInsertHtml_(editor, html) {
+    var raw = editor && editor.__raw ? editor.__raw : null;
+    if (!raw) return;
+    raw.model.change(function () {
+      var viewFragment = raw.data.processor.toView(String(html || ""));
+      var modelFragment = raw.data.toModel(viewFragment);
+      raw.model.insertContent(modelFragment, raw.model.document.selection);
+    });
   }
 
-  function api(payload) {
-    var base = window.APPS_SCRIPT_URL || "";
-    if (!base) return Promise.reject(new Error("APPS_SCRIPT_URL nao configurada."));
+  function createCkEditorAdapter_(rawEditor) {
+    return {
+      setData: function (html) {
+        rawEditor.setData(html || "<p>Digite a ATA aqui...</p>");
+      },
+      getData: function () {
+        return rawEditor.getData() || "";
+      },
+      insertHtml: function (html) {
+        ckInsertHtml_(this, html);
+      },
+      focus: function () {
+        rawEditor.editing.view.focus();
+      },
+      execCommand: function (name, options) {
+        if (!rawEditor.commands.get(name)) return false;
+        rawEditor.execute(name, options);
+        rawEditor.editing.view.focus();
+        return true;
+      },
+      setAlignment: function (alignment) {
+        if (!rawEditor.commands.get("alignment")) return false;
+        rawEditor.execute("alignment", { value: alignment });
+        rawEditor.editing.view.focus();
+        return true;
+      },
+      __raw: rawEditor
+    };
+  }
 
-    if (payload && payload.acao !== "login") {
-      var sid = window.__SID__ || "";
-      if (sid) payload.sid = sid;
+  function getApiBaseUrls() {
+    var out = [];
+    if (Array.isArray(window.APPS_SCRIPT_URLS)) {
+      window.APPS_SCRIPT_URLS.forEach(function (u) {
+        var s = String(u || "").trim();
+        if (s && out.indexOf(s) < 0) out.push(s);
+      });
     }
+    var single = String(window.APPS_SCRIPT_URL || "").trim();
+    if (single && out.indexOf(single) < 0) out.push(single);
+    return out;
+  }
 
+  function callJsonp(base, payload, timeoutMs) {
     return new Promise(function (resolve, reject) {
       var cb = "__cb_ata_" + Math.random().toString(36).slice(2);
       var script = null;
@@ -110,10 +120,35 @@
       timer = setTimeout(function () {
         clean();
         reject(new Error("Timeout ao acessar Apps Script."));
-      }, 30000);
+      }, timeoutMs || 30000);
 
       document.head.appendChild(script);
     });
+  }
+
+  async function api(payload) {
+    var bases = getApiBaseUrls();
+    if (!bases.length) return Promise.reject(new Error("APPS_SCRIPT_URL nao configurada."));
+
+    if (payload && payload.acao !== "login") {
+      var sid = window.__SID__ || "";
+      if (sid) payload.sid = sid;
+    }
+
+    var lastErr = null;
+    for (var i = 0; i < bases.length; i++) {
+      for (var attempt = 1; attempt <= 2; attempt++) {
+        try {
+          return await callJsonp(bases[i], payload || {}, 30000 + ((attempt - 1) * 6000));
+        } catch (e) {
+          lastErr = e;
+          await new Promise(function (r) { setTimeout(r, 250 * attempt); });
+        }
+      }
+    }
+
+    var msg = (lastErr && lastErr.message) ? lastErr.message : "Falha de rede ao acessar Apps Script.";
+    throw new Error(msg + " Verifique rede e publicação do Apps Script.");
   }
 
   function bindAtaToolbarCommands_(editor) {
@@ -122,108 +157,82 @@
       btn.addEventListener("click", function () {
         var cmd = (btn.getAttribute("data-cmd") || "").trim();
         if (!cmd) return;
+        if (!editor) return;
         editor.focus();
-        if (cmd === "undo") return editor.commands.undo();
-        if (cmd === "redo") return editor.commands.redo();
-        if (cmd === "h2") return editor.commands.heading({ level: 2 });
-        if (cmd === "h3") return editor.commands.heading({ level: 3 });
-        if (cmd === "bold") return editor.commands.bold();
-        if (cmd === "italic") return editor.commands.italic();
-        if (cmd === "underline") return editor.commands.underline();
-        if (cmd === "strike") return editor.commands.strike();
-        if (cmd === "bulletList") return editor.commands.bullet_list();
-        if (cmd === "orderedList") return editor.commands.ordered_list();
-        if (cmd === "blockquote") return editor.commands.blockquote();
-        if (cmd === "horizontalRule") return editor.commands.horizontal_rule();
-        if (cmd === "alignLeft") return editor.commands.text_align({ alignment: "left" });
-        if (cmd === "alignCenter") return editor.commands.text_align({ alignment: "center" });
-        if (cmd === "alignRight") return editor.commands.text_align({ alignment: "right" });
-        if (cmd === "alignJustify") return editor.commands.text_align({ alignment: "justify" });
+        if (cmd === "undo") return editor.execCommand("undo");
+        if (cmd === "redo") return editor.execCommand("redo");
+        if (cmd === "h2") return editor.execCommand("heading", { value: "heading2" });
+        if (cmd === "h3") return editor.execCommand("heading", { value: "heading3" });
+        if (cmd === "bold") return editor.execCommand("bold");
+        if (cmd === "italic") return editor.execCommand("italic");
+        if (cmd === "underline") return editor.execCommand("underline");
+        if (cmd === "strike") return editor.execCommand("strikethrough");
+        if (cmd === "bulletList") return editor.execCommand("bulletedList");
+        if (cmd === "orderedList") return editor.execCommand("numberedList");
+        if (cmd === "blockquote") return editor.execCommand("blockQuote");
+        if (cmd === "horizontalRule") {
+          if (!editor.execCommand("horizontalLine")) editor.insertHtml("<hr />");
+          return;
+        }
+        if (cmd === "alignLeft") return editor.setAlignment("left");
+        if (cmd === "alignCenter") return editor.setAlignment("center");
+        if (cmd === "alignRight") return editor.setAlignment("right");
+        if (cmd === "alignJustify") return editor.setAlignment("justify");
         if (cmd === "link") {
           var href = window.prompt("Informe a URL do link:", "https://");
           if (!href) return;
-          return editor.commands.link({ href: href });
+          if (!editor.execCommand("link", href)) return setNotice("err", "Comando de link indisponível no editor.");
+          return;
         }
         if (cmd === "image") {
           var src = window.prompt("Informe a URL da imagem:", "https://");
           if (!src) return;
-          return editor.commands.image({ src: src });
+          editor.insertHtml("<p><img src='" + src + "' alt='Imagem' style='max-width:100%; border-radius:8px;' /></p>");
+          return;
         }
-        if (cmd === "table") return editor.commands.create_table({ rowsCount: 3, colsCount: 3, withHeaderRow: true });
+        if (cmd === "table") {
+          if (!editor.execCommand("insertTable", { rows: 3, columns: 3 })) {
+            editor.insertHtml("<table border='1' style='width:100%; border-collapse:collapse;'><tr><th>Título 1</th><th>Título 2</th></tr><tr><td>Texto</td><td>Texto</td></tr></table>");
+          }
+        }
       });
     });
-  }
-
-  function createBasicAtaEditorAdapter_(element, initialHtml) {
-    if (!element) throw new Error("Elemento do editor não encontrado.");
-    element.setAttribute("contenteditable", "true");
-    element.classList.add("tiptap-prose");
-    element.innerHTML = initialHtml || "<p>Digite a ATA aqui...</p>";
-
-    return {
-      setData: function (html) {
-        element.innerHTML = html || "<p>Digite a ATA aqui...</p>";
-      },
-      getData: function () {
-        return element.innerHTML || "";
-      },
-      insertHtml: function (html) {
-        var extra = String(html || "");
-        if (!extra) return;
-        element.focus();
-        try {
-          document.execCommand("insertHTML", false, extra);
-        } catch (e) {
-          element.innerHTML += extra;
-        }
-      },
-      focus: function () {
-        element.focus();
-      },
-      __raw: null
-    };
   }
 
   function ensureEditor() {
     return new Promise(function (resolve, reject) {
       if (window.__ATA_EDITOR__) return resolve(window.__ATA_EDITOR__);
-      if (!window.tiptap || !window.tiptap.Editor || !window.tiptapExtensions) {
-        window.__ATA_EDITOR__ = createBasicAtaEditorAdapter_(qs("editorAtaFull"), "<p>Digite a ATA aqui...</p>");
-        setNotice("ok", "Tiptap indisponível no navegador. Editor básico local ativado.");
-        return resolve(window.__ATA_EDITOR__);
+      if (!window.CKEDITOR || !window.CKEDITOR.ClassicEditor) {
+        return reject(new Error("Editor rico indisponível no navegador. Verifique bloqueio da CDN do CKEditor."));
       }
 
-      var editor = new window.tiptap.Editor({
-        element: qs("editorAtaFull"),
-        extensions: buildTiptapExtensions_(),
-        content: "<p>Digite a ATA aqui...</p>",
-        editorProps: {
-          attributes: {
-            class: "tiptap-prose"
+      window.CKEDITOR.ClassicEditor
+        .create(qs("editorAtaFull"), {
+          toolbar: {
+            items: [
+              "undo", "redo", "|",
+              "heading", "|",
+              "bold", "italic", "underline", "strikethrough", "|",
+              "alignment", "|",
+              "bulletedList", "numberedList", "blockQuote", "|",
+              "link", "insertTable", "|",
+              "removeFormat"
+            ]
+          },
+          link: {
+            addTargetToExternalLinks: true,
+            defaultProtocol: "https://"
           }
-        }
-      });
-
-      bindAtaToolbarCommands_(editor);
-      window.__ATA_EDITOR__ = {
-        setData: function (html) {
-          editor.setContent(html || "<p>Digite a ATA aqui...</p>");
-        },
-        getData: function () {
-          return editor.getHTML();
-        },
-        insertHtml: function (html) {
-          var extra = String(html || "");
-          if (!extra) return;
-          if (editor.commands.insertHTML) return editor.commands.insertHTML(extra);
-          editor.setContent((editor.getHTML() || "") + extra);
-        },
-        focus: function () {
-          editor.focus();
-        },
-        __raw: editor
-      };
-      resolve(window.__ATA_EDITOR__);
+        })
+        .then(function (rawEditor) {
+          window.__ATA_EDITOR__ = createCkEditorAdapter_(rawEditor);
+          bindAtaToolbarCommands_(window.__ATA_EDITOR__);
+          window.__ATA_EDITOR__.setData("<p>Digite a ATA aqui...</p>");
+          resolve(window.__ATA_EDITOR__);
+        })
+        .catch(function (err) {
+          reject(new Error("Não foi possível iniciar o editor rico (CKEditor). " + (err && err.message ? err.message : "")));
+        });
     });
   }
 
