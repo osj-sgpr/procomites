@@ -291,7 +291,8 @@
             "RevisionHistory",
             "Pagination",
             "WProofreader",
-            "MathType"
+            "MathType",
+            "DocumentOutline"
           ],
           toolbar: {
             items: [
