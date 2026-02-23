@@ -33,6 +33,35 @@
     return msg.indexOf("acao invalida: " + a) >= 0 || msg.indexOf("acao inv") >= 0;
   }
 
+  function loadScriptOnce(src) {
+    return new Promise(function (resolve, reject) {
+      var existing = document.querySelector("script[src='" + src + "']");
+      if (existing) {
+        if (window.CKEDITOR) return resolve();
+        existing.addEventListener("load", function () { resolve(); }, { once: true });
+        existing.addEventListener("error", function () { reject(new Error("Falha ao carregar script do editor.")); }, { once: true });
+        return;
+      }
+      var s = document.createElement("script");
+      s.src = src;
+      s.onload = function () { resolve(); };
+      s.onerror = function () { reject(new Error("Falha ao carregar script do editor.")); };
+      document.head.appendChild(s);
+    });
+  }
+
+  async function ensureCkeditorGlobal() {
+    if (window.CKEDITOR) return;
+    try {
+      await loadScriptOnce("https://cdn.ckeditor.com/4.25.1-lts/full-all/ckeditor.js");
+    } catch (e) {
+      await loadScriptOnce("https://cdnjs.cloudflare.com/ajax/libs/ckeditor/4.25.1-lts/ckeditor.js");
+    }
+    if (!window.CKEDITOR) {
+      throw new Error("Editor rico indisponivel no navegador. Verifique bloqueio de CDN/rede.");
+    }
+  }
+
   function api(payload) {
     var base = window.APPS_SCRIPT_URL || "";
     if (!base) return Promise.reject(new Error("APPS_SCRIPT_URL nao configurada."));
@@ -128,6 +157,7 @@
     user: null,
     session: null,
     reunioes: [],
+    comiteAtual: "",
     reuniaoAtual: null,
     idToken: null
   };
@@ -141,11 +171,56 @@
     return null;
   }
 
-  function fillReunioesSelect() {
+  function getComitesDisponiveis() {
+    var out = [];
+    for (var i = 0; i < state.reunioes.length; i++) {
+      var c = (state.reunioes[i].comite || "").toString().trim();
+      if (c && out.indexOf(c) < 0) out.push(c);
+    }
+    return out;
+  }
+
+  function fillComitesSelect() {
+    var sel = qs("ataComite");
+    if (!sel) return;
+    sel.innerHTML = "";
+
+    var comites = getComitesDisponiveis();
+    comites.forEach(function (c) {
+      var o = document.createElement("option");
+      o.value = c;
+      o.textContent = c;
+      sel.appendChild(o);
+    });
+
+    if (!comites.length) {
+      state.comiteAtual = "";
+      return;
+    }
+
+    var fromMeetingId = (getUrlParam("id") || "").trim();
+    var fromMeeting = fromMeetingId ? findReuniaoById(fromMeetingId) : null;
+    var targetComite = "";
+    if (fromMeeting && fromMeeting.comite) targetComite = fromMeeting.comite;
+    else if (state.session && state.session.perfil !== "Admin" && state.session.comite) targetComite = state.session.comite;
+    else targetComite = comites[0];
+
+    if (comites.indexOf(targetComite) < 0) targetComite = comites[0];
+    sel.value = targetComite;
+    state.comiteAtual = targetComite;
+  }
+
+  function fillReunioesSelectByComite() {
     var sel = qs("ataReuniao");
     if (!sel) return;
     sel.innerHTML = "";
-    state.reunioes.forEach(function (r) {
+
+    var filtradas = state.reunioes.filter(function (r) {
+      if (!state.comiteAtual) return true;
+      return String(r.comite || "").trim() === state.comiteAtual;
+    });
+
+    filtradas.forEach(function (r) {
       var o = document.createElement("option");
       o.value = r.idReuniao || "";
       o.textContent = (r.titulo || "(sem titulo)") + " - " + fmtDate(r.data) + " - " + (r.comite || "-");
@@ -153,9 +228,12 @@
     });
 
     var fromUrl = (getUrlParam("id") || "").trim();
-    var target = fromUrl || (state.reunioes[0] && state.reunioes[0].idReuniao) || "";
+    var target = "";
+    if (fromUrl && filtradas.some(function (x) { return x.idReuniao === fromUrl; })) target = fromUrl;
+    else target = (filtradas[0] && filtradas[0].idReuniao) || "";
     if (target) sel.value = target;
     if (target) state.reuniaoAtual = findReuniaoById(target);
+    else state.reuniaoAtual = null;
   }
 
   function updateMeta() {
@@ -176,7 +254,8 @@
     if (!state.session) return;
     var r = await api({ acao: "listarReunioes", idToken: state.idToken, idUsuario: state.session.idUsuario });
     state.reunioes = r.reunioes || [];
-    fillReunioesSelect();
+    fillComitesSelect();
+    fillReunioesSelectByComite();
     updateMeta();
   }
 
@@ -221,6 +300,18 @@
       return;
     }
     throw new Error(r.mensagem || "Nao foi possivel gerar PDF.");
+  }
+
+  async function gerarDocAta() {
+    if (!state.reuniaoAtual) return;
+    var editor = await ensureEditor();
+    var r = await api({ acao: "gerarDocAta", idToken: state.idToken, idReuniao: state.reuniaoAtual.idReuniao, html: editor.getData() });
+    if (r.sucesso && r.url) {
+      window.open(r.url, "_blank", "noopener");
+      setNotice("ok", "Google Doc gerado com sucesso.");
+      return;
+    }
+    throw new Error(r.mensagem || "Nao foi possivel gerar Google Doc.");
   }
 
   async function uploadAtaAssinada() {
@@ -325,6 +416,7 @@
     qs("userLine").textContent = (user.displayName || "") + " - " + (user.email || "") + " - " + (state.session.perfil || "");
     qs("editorCard").classList.remove("hidden");
 
+    await ensureCkeditorGlobal();
     await ensureEditor();
     await carregarReunioes();
     if (state.reuniaoAtual) await carregarAta();
@@ -339,6 +431,12 @@
 
     qs("btnLogout").addEventListener("click", async function () {
       await auth.signOut();
+    });
+
+    qs("ataComite").addEventListener("change", function () {
+      state.comiteAtual = (qs("ataComite").value || "").trim();
+      fillReunioesSelectByComite();
+      updateMeta();
     });
 
     qs("ataReuniao").addEventListener("change", function () {
@@ -373,6 +471,14 @@
     qs("btnGerarPdfAta").addEventListener("click", async function () {
       try {
         await gerarPdfAta();
+      } catch (e) {
+        setNotice("err", e.message);
+      }
+    });
+
+    qs("btnGerarDocAta").addEventListener("click", async function () {
+      try {
+        await gerarDocAta();
       } catch (e) {
         setNotice("err", e.message);
       }
