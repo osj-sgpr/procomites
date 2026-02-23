@@ -117,6 +117,59 @@
           </div>
           <button id="btnSalvarNovo" class="primary">Confirmar participação</button>
         </div>
+
+        <div id="diariaFields" class="hidden" style="margin-top: 10px;">
+          <div class="row">
+            <div class="field">
+              <label>Tipo da solicitação de diária</label>
+              <select id="tipoSolicitacaoDiaria">
+                <option value="">Selecione...</option>
+                <option value="reuniao">Reunião presencial</option>
+                <option value="viagem">Viagem / Curso</option>
+              </select>
+              <div id="diariaHint" class="small" style="margin-top: 4px;"></div>
+            </div>
+          </div>
+
+          <div id="diariaViagemFields" class="hidden" style="margin-top: 8px;">
+            <div class="row">
+              <div class="field">
+                <label>Local de saída</label>
+                <input id="diariaLocalSaida" placeholder="Ex.: Palmas - TO" />
+              </div>
+              <div class="field">
+                <label>Destino</label>
+                <input id="diariaDestino" placeholder="Ex.: Brasília - DF" />
+              </div>
+            </div>
+            <div class="row" style="margin-top: 10px;">
+              <div class="field">
+                <label>Nome do evento</label>
+                <input id="diariaNomeEvento" placeholder="Ex.: Capacitação técnica" />
+              </div>
+            </div>
+            <div class="row" style="margin-top: 10px;">
+              <div class="field">
+                <label>Data/hora de saída</label>
+                <input id="diariaDataHoraSaida" type="datetime-local" />
+              </div>
+              <div class="field">
+                <label>Data/hora de início do evento</label>
+                <input id="diariaDataHoraInicioEvento" type="datetime-local" />
+              </div>
+            </div>
+            <div class="row" style="margin-top: 10px;">
+              <div class="field">
+                <label>Data/hora de fim do evento</label>
+                <input id="diariaDataHoraFimEvento" type="datetime-local" />
+              </div>
+              <div class="field">
+                <label>Data/hora de retorno</label>
+                <input id="diariaDataHoraRetorno" type="datetime-local" />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div id="panelCodigo" class="hidden" style="margin-top: 14px;">
@@ -151,6 +204,6 @@
   <script>
     window.APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPGdYJ6kYEPPDCZUaoCqyxoDvtlwQOTunvvkPP2RHjMg0TzvflUQdfMcGxE-hSTgT3/exec";
   </script>
-  <script src="./app.js?v=20250223a"></script>
+  <script src="./app.js?v=20260222b"></script>
 </body>
 </html>

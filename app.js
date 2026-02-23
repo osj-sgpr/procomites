@@ -110,6 +110,7 @@
   // -------------------- Página pública (validar-presenca.html) --------------------
   async function initPublic() {
     let idReuniao = (getUrlParam("id") || "").trim();
+    let reuniaoSelecionadaPublica = null;
     const badge = qs("reuniaoBadge");
     const reuniaoMeta = qs("reuniaoMeta");
     const reuniaoLocalLink = qs("reuniaoLocalLink");
@@ -142,6 +143,7 @@
     }
 
     function renderReuniaoHeader(reuniao) {
+      reuniaoSelecionadaPublica = reuniao || null;
       if (!reuniao) {
         if (badge) badge.textContent = "Reunião: " + (idReuniao || "-");
         if (reuniaoMeta) reuniaoMeta.textContent = idReuniao ? "ID da reunião: " + idReuniao : "Selecione uma reunião para continuar.";
@@ -259,6 +261,7 @@
       });
       pubReuniao?.addEventListener("change", () => {
         syncSelectedReuniao();
+        updateDiariaFieldsUi();
       });
     } else {
       await carregarDetalhePorId(idReuniao);
@@ -269,6 +272,37 @@
     const panelNovo = qs("panelNovo");
     const panelCodigo = qs("panelCodigo");
     const codigoEl = qs("codigo");
+    const precisaDiariaEl = qs("precisaDiaria");
+    const tipoSolicitacaoDiariaEl = qs("tipoSolicitacaoDiaria");
+    const diariaFieldsEl = qs("diariaFields");
+    const diariaViagemFieldsEl = qs("diariaViagemFields");
+    const diariaHintEl = qs("diariaHint");
+
+    function isReuniaoPresencialSelecionada() {
+      var tipo = ((reuniaoSelecionadaPublica && reuniaoSelecionadaPublica.tipo) || "").toString().trim().toLowerCase();
+      return tipo === "presencial";
+    }
+
+    function updateDiariaFieldsUi() {
+      const precisa = (precisaDiariaEl?.value || "NÃO").trim();
+      const tipo = (tipoSolicitacaoDiariaEl?.value || "").trim();
+      if (diariaFieldsEl) diariaFieldsEl.classList.toggle("hidden", precisa !== "SIM");
+      if (diariaViagemFieldsEl) diariaViagemFieldsEl.classList.toggle("hidden", !(precisa === "SIM" && tipo === "viagem"));
+
+      if (diariaHintEl) {
+        if (precisa !== "SIM") {
+          diariaHintEl.textContent = "";
+        } else if (tipo === "reuniao") {
+          const nome = (reuniaoSelecionadaPublica && reuniaoSelecionadaPublica.titulo) || "reunião selecionada";
+          const comite = (reuniaoSelecionadaPublica && reuniaoSelecionadaPublica.comite) || "";
+          diariaHintEl.textContent = "Diária para reunião presencial: " + nome + (comite ? (" (" + comite + ")") : "") + ".";
+        } else if (tipo === "viagem") {
+          diariaHintEl.textContent = "Preencha os dados de deslocamento e do evento/curso.";
+        } else {
+          diariaHintEl.textContent = "Selecione o tipo da solicitação de diária.";
+        }
+      }
+    }
 
     if (cpfEl) {
       cpfEl.addEventListener("input", () => {
@@ -282,6 +316,9 @@
         telEl.value = formatPhone(telEl.value || "");
       });
     }
+
+    precisaDiariaEl?.addEventListener("change", updateDiariaFieldsUi);
+    tipoSolicitacaoDiariaEl?.addEventListener("change", updateDiariaFieldsUi);
 
     function showCodigo(code) {
       if (panelCodigo) panelCodigo.classList.remove("hidden");
@@ -346,9 +383,29 @@
       const cidade = (qs("cidade")?.value || "").trim();
       const perfil = (qs("perfil")?.value || "Membro").trim();
       const precisaDiaria = (qs("precisaDiaria")?.value || "NÃO").trim();
+      const tipoSolicitacaoDiaria = (qs("tipoSolicitacaoDiaria")?.value || "").trim();
+      const localSaida = (qs("diariaLocalSaida")?.value || "").trim();
+      const destino = (qs("diariaDestino")?.value || "").trim();
+      const nomeEvento = (qs("diariaNomeEvento")?.value || "").trim();
+      const dataHoraSaida = (qs("diariaDataHoraSaida")?.value || "").trim();
+      const dataHoraInicioEvento = (qs("diariaDataHoraInicioEvento")?.value || "").trim();
+      const dataHoraFimEvento = (qs("diariaDataHoraFimEvento")?.value || "").trim();
+      const dataHoraRetorno = (qs("diariaDataHoraRetorno")?.value || "").trim();
 
       if (cpf.length !== 11) return setNotice("err", "CPF inválido.");
       if (!nome) return setNotice("err", "Informe o nome.");
+
+      if (precisaDiaria === "SIM") {
+        if (!tipoSolicitacaoDiaria) return setNotice("err", "Selecione o tipo da solicitação de diária.");
+        if (tipoSolicitacaoDiaria === "reuniao" && !isReuniaoPresencialSelecionada()) {
+          return setNotice("err", "Diária para reunião só é permitida para reunião presencial.");
+        }
+        if (tipoSolicitacaoDiaria === "viagem") {
+          if (!localSaida || !destino || !nomeEvento || !dataHoraSaida || !dataHoraInicioEvento || !dataHoraFimEvento || !dataHoraRetorno) {
+            return setNotice("err", "Preencha todos os dados da viagem/curso para solicitar diária.");
+          }
+        }
+      }
 
       const btn = qs("btnSalvarNovo");
       btn.disabled = true;
@@ -364,6 +421,14 @@
           cidade,
           perfil,
           precisaDiaria,
+          tipoSolicitacaoDiaria,
+          localSaida,
+          destino,
+          nomeEvento,
+          dataHoraSaida,
+          dataHoraInicioEvento,
+          dataHoraFimEvento,
+          dataHoraRetorno,
         });
         if (r.status === "ja_presente") {
           setNotice("ok", r.mensagem || "Participação já validada.");
@@ -391,6 +456,7 @@
 
     btnValidar?.addEventListener("click", validar);
     qs("btnSalvarNovo")?.addEventListener("click", salvarNovo);
+    updateDiariaFieldsUi();
   }
 
   // -------------------- Painel (index.html) --------------------
@@ -1540,40 +1606,13 @@
     }
 
     function abrirAtaEmNovaAba() {
-      if (!reuniaoAtual) {
-        setNotice("err", "Selecione uma reunião antes de abrir o editor de ATA.");
-        return;
-      }
-      const url = `./ata-editor.html?id=${encodeURIComponent(reuniaoAtual.idReuniao || "")}`;
+      const base = "./ata-editor.html";
+      const url = reuniaoAtual ? `${base}?id=${encodeURIComponent(reuniaoAtual.idReuniao || "")}` : base;
       window.open(url, "_blank", "noopener");
     }
 
     async function abrirAta() {
-      if (!reuniaoAtual) return;
-
-      if (!session || (session.perfil !== "Admin" && session.perfil !== "Presidente" && session.perfil !== "Secretario")) {
-        setNotice("err", "Sem permissão.");
-        return;
-      }
-
-      panelAta.classList.remove("hidden");
-
-      if (!editor) {
-        editor = await ClassicEditor.create(qs("editorAta"), {
-          toolbar: ["heading", "|", "bold", "italic", "link", "bulletedList", "numberedList", "|", "undo", "redo"],
-        });
-      }
-
-      try {
-        const r = await api({ acao: "obterAtaRascunho", idToken, idReuniao: reuniaoAtual.idReuniao });
-        editor.setData(r.html || "<p>Digite a ata aqui...</p>");
-        if (ataUploadStatus) {
-          const link = (r.ataPdfAssinadaLink || "").toString().trim();
-          ataUploadStatus.textContent = link ? ("Publicado: " + link) : "";
-        }
-      } catch (e) {
-        editor.setData("<p>Digite a ata aqui...</p>");
-      }
+      abrirAtaEmNovaAba();
     }
 
     async function salvarAta() {
