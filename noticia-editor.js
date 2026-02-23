@@ -276,42 +276,63 @@
 
       ClassicEditorCtor
         .create(qs("editorConteudo"), {
-          removePlugins: [
-            "CKBox",
-            "CKFinder",
-            "CKFinderUploadAdapter",
-            "EasyImage",
-            "RealTimeCollaborativeComments",
-            "RealTimeCollaborativeTrackChanges",
-            "RealTimeCollaborativeRevisionHistory",
-            "PresenceList",
-            "Comments",
-            "TrackChanges",
-            "TrackChangesData",
-            "RevisionHistory",
-            "Pagination",
-            "WProofreader",
-            "MathType",
-            "DocumentOutline",
-            "MediaEmbed",
-            "WordCount",
-            "TableToolbar",
-            "TableCaption",
-            "ImageUpload",
-            "ImageCaption",
-            "LinkImage",
-            "AutoLink",
-            "Autoformat"
-          ],
           toolbar: {
             items: [
               "undo", "redo", "|",
               "heading", "|",
-              "bold", "italic", "underline", "strikethrough", "|",
+              "bold", "italic", "underline", "strikethrough", "subscript", "superscript", "|",
               "alignment", "|",
-              "bulletedList", "numberedList", "blockQuote", "|",
-              "link", "insertTable", "|",
+              "fontColor", "fontBackgroundColor", "fontSize", "fontFamily", "|",
+              "highlight", "|",
+              "bulletedList", "numberedList", "outdent", "indent", "|",
+              "blockQuote", "codeBlock", "|",
+              "link", "imageUpload", "insertTable", "mediaEmbed", "|",
+              "horizontalLine", "pageBreak", "|",
               "removeFormat"
+            ]
+          },
+          heading: {
+            options: [
+              { model: 'paragraph', title: 'Parágrafo', class: 'ck-heading_paragraph' },
+              { model: 'heading1', view: 'h1', title: 'Título 1', class: 'ck-heading_heading1' },
+              { model: 'heading2', view: 'h2', title: 'Título 2', class: 'ck-heading_heading2' },
+              { model: 'heading3', view: 'h3', title: 'Título 3', class: 'ck-heading_heading3' },
+              { model: 'heading4', view: 'h4', title: 'Título 4', class: 'ck-heading_heading4' },
+              { model: 'heading5', view: 'h5', title: 'Título 5', class: 'ck-heading_heading5' },
+              { model: 'heading6', view: 'h6', title: 'Título 6', class: 'ck-heading_heading6' }
+            ]
+          },
+          fontSize: {
+            options: [
+              'default',
+              8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+              21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+              32, 34, 36, 38, 40, 42, 44, 46, 48, 50,
+              52, 54, 56, 58, 60, 64, 68, 72, 76, 80
+            ]
+          },
+          fontFamily: {
+            options: [
+              'default',
+              'Arial, Helvetica, sans-serif',
+              'Georgia, serif',
+              'Times New Roman, Times, serif',
+              'Courier New, Courier, monospace',
+              'Verdana, Geneva, sans-serif',
+              'Trebuchet MS, Helvetica, sans-serif',
+              'Tahoma, Geneva, sans-serif'
+            ]
+          },
+          table: {
+            contentToolbar: [
+              "tableColumn", "tableRow", "mergeTableCells",
+              "tableProperties", "tableCellProperties"
+            ]
+          },
+          image: {
+            toolbar: [
+              "imageTextAlternative", "imageStyle:full", "imageStyle:side", "imageStyle:inline",
+              "linkImage", "imageCaption"
             ]
           },
           link: {
