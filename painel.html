@@ -8,35 +8,41 @@
   <meta http-equiv="Expires" content="0" />
   <title>ProComitês Tocantins - Painel de Gestão</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="./styles.css?v=20260222k" />
+  <link rel="stylesheet" href="./styles.css?v=20250223a" />
 </head>
 <body>
+
+  <div class="site-top-bar">
+    <div class="container">
+      <header>
+        <div class="brand">
+          <h1>ProComitês</h1>
+          <p>Painel de Gestão — Comitês de Bacias Hidrográficas do Tocantins</p>
+        </div>
+        <div class="row">
+          <span id="authBadge" class="badge" style="border-color: rgba(255,255,255,0.3); color: #fff; background: rgba(255,255,255,0.12);">Deslogado</span>
+          <button id="btnLogin" class="primary">Entrar com Google</button>
+          <button id="btnLogout" class="danger hidden">Sair</button>
+        </div>
+      </header>
+    </div>
+  </div>
+
+  <div class="site-nav-bar">
+    <div class="container">
+      <nav>
+        <a class="nav-link" href="./index.html">Home</a>
+        <a class="nav-link" href="./noticias.html">Notícias</a>
+        <a class="nav-link" href="./comites.html">Comitês do Tocantins</a>
+        <a class="nav-link" href="./fale-conosco.html">Fale Conosco</a>
+        <a class="nav-link" href="./validar-presenca.html">Confirmar Participação</a>
+        <a class="nav-link active" href="./painel.html">Painel</a>
+      </nav>
+    </div>
+  </div>
+
   <div class="container">
-    <header>
-      <div class="brand">
-        <h1>ProComitês</h1>
-        <p>Gestão dos Comitês de Bacias Hidrográficas do Estado do Tocantins</p>
-      </div>
-      <div class="row">
-        <span id="authBadge" class="badge">Deslogado</span>
-        <button id="btnLogin" class="primary">Entrar com Google</button>
-        <button id="btnLogout" class="danger hidden">Sair</button>
-      </div>
-    </header>
-
     <div id="notice" class="notice hidden"></div>
-
-    <section class="card" style="margin-bottom: 14px;">
-      <div style="font-weight: 700; margin-bottom: 6px;">Portal público em páginas separadas</div>
-      <div class="small">Use as páginas abaixo para navegação institucional.</div>
-      <div class="portal-nav" style="margin-top: 10px;">
-        <a class="portal-nav-link" href="./index.html">Home</a>
-        <a class="portal-nav-link" href="./noticias.html">Notícias</a>
-        <a class="portal-nav-link" href="./comites.html">Comitês do Tocantins</a>
-        <a class="portal-nav-link" href="./fale-conosco.html">Fale Conosco</a>
-        <a class="portal-nav-link" href="./validar-presenca.html">Confirmar Participação</a>
-      </div>
-    </section>
 
     <div class="grid">
       <div class="card">
@@ -344,6 +350,23 @@
     </div>
   </div>
 
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          ProComitês
+          <span>Portal dos Comitês de Bacias Hidrográficas do Tocantins</span>
+        </div>
+        <div class="footer-links">
+          <a href="./index.html">Home</a>
+          <a href="./noticias.html">Notícias</a>
+          <a href="./comites.html">Comitês</a>
+          <a href="./fale-conosco.html">Contato</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
   <script>
     window.APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPGdYJ6kYEPPDCZUaoCqyxoDvtlwQOTunvvkPP2RHjMg0TzvflUQdfMcGxE-hSTgT3/exec";
   </script>
@@ -360,6 +383,6 @@
 
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="./app.js?v=20260222k"></script>
+  <script src="./app.js?v=20250223a"></script>
 </body>
 </html>

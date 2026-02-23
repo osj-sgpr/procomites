@@ -8,31 +8,41 @@
   <meta http-equiv="Expires" content="0" />
   <title>ProComitês - Home</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="./styles.css?v=20260222l" />
+  <link rel="stylesheet" href="./styles.css?v=20250223a" />
 </head>
 <body data-page="home">
-  <div class="container site-shell">
-    <header class="site-header">
-      <div class="brand">
-        <h1>ProComitês</h1>
-        <p>Portal dos Comitês de Bacias Hidrográficas do Tocantins</p>
-      </div>
-      <nav class="portal-nav">
-        <a class="portal-nav-link active" href="./index.html">Home</a>
-        <a class="portal-nav-link" href="./noticias.html">Notícias</a>
-        <a class="portal-nav-link" href="./comites.html">Comitês do Tocantins</a>
-        <a class="portal-nav-link" href="./fale-conosco.html">Fale Conosco</a>
-        <a class="portal-nav-link" href="./painel.html">Painel</a>
-      </nav>
-    </header>
 
+  <div class="site-top-bar">
+    <div class="container">
+      <header>
+        <div class="brand">
+          <h1>ProComitês</h1>
+          <p>Portal dos Comitês de Bacias Hidrográficas do Tocantins</p>
+        </div>
+      </header>
+    </div>
+  </div>
+
+  <div class="site-nav-bar">
+    <div class="container">
+      <nav>
+        <a class="nav-link active" href="./index.html">Home</a>
+        <a class="nav-link" href="./noticias.html">Notícias</a>
+        <a class="nav-link" href="./comites.html">Comitês do Tocantins</a>
+        <a class="nav-link" href="./fale-conosco.html">Fale Conosco</a>
+        <a class="nav-link" href="./painel.html">Painel</a>
+      </nav>
+    </div>
+  </div>
+
+  <div class="container">
     <div id="publicNotice" class="notice hidden"></div>
 
     <section class="card portal-public">
       <div id="publicHero" class="public-hero">
         <button id="heroEditBtn" class="hero-edit-btn hidden" title="Editar banner da Home">✎</button>
         <div class="public-hero-overlay">
-          <div id="heroBadge" class="small" style="color: #d3eef5;">Portal Oficial</div>
+          <div id="heroBadge" class="small" style="color: rgba(255,255,255,0.7);">Portal Oficial</div>
           <h2 id="heroTitulo">Comitês de Bacias Hidrográficas do Estado do Tocantins</h2>
           <p id="heroSubtitulo">Acompanhe reuniões, publicações e notícias oficiais dos comitês.</p>
           <a id="heroBotao" class="hero-link" href="#" target="_blank" rel="noopener">Saiba mais</a>
@@ -40,17 +50,17 @@
       </div>
     </section>
 
-    <section class="grid" style="margin-top: 14px; grid-template-columns: 1.2fr .8fr;">
+    <section class="grid" style="margin-top: 20px; grid-template-columns: 1.2fr .8fr;">
       <article class="card">
-        <div style="font-weight: 700;">Últimas notícias</div>
-        <div class="small">As 3 notícias mais recentes publicadas no portal.</div>
-        <div id="publicUltimasNoticias" class="list" style="margin-top: 10px;"></div>
+        <div class="section-title">Últimas notícias</div>
+        <p class="section-subtitle">As 3 notícias mais recentes publicadas no portal.</p>
+        <div id="publicUltimasNoticias" class="list" style="margin-top: 14px;"></div>
       </article>
 
       <article class="card">
-        <div id="publicContatoTitulo" style="font-weight: 700;">Fale Conosco</div>
-        <div id="publicContatoTexto" class="small" style="margin-top: 6px;"></div>
-        <div class="contact-lines" style="margin-top: 10px;">
+        <div id="publicContatoTitulo" class="section-title">Fale Conosco</div>
+        <div id="publicContatoTexto" class="section-subtitle" style="margin-top: 4px;"></div>
+        <div class="contact-lines" style="margin-top: 14px;">
           <div><strong>Email:</strong> <span id="publicContatoEmail">-</span></div>
           <div><strong>Telefone:</strong> <span id="publicContatoTelefone">-</span></div>
           <div><strong>Endereço:</strong> <span id="publicContatoEndereco">-</span></div>
@@ -59,9 +69,26 @@
     </section>
   </div>
 
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          ProComitês
+          <span>Portal dos Comitês de Bacias Hidrográficas do Tocantins</span>
+        </div>
+        <div class="footer-links">
+          <a href="./index.html">Home</a>
+          <a href="./noticias.html">Notícias</a>
+          <a href="./comites.html">Comitês</a>
+          <a href="./fale-conosco.html">Contato</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
   <script>
     window.APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPGdYJ6kYEPPDCZUaoCqyxoDvtlwQOTunvvkPP2RHjMg0TzvflUQdfMcGxE-hSTgT3/exec";
   </script>
-  <script src="./portal-public.js?v=20260222m"></script>
+  <script src="./portal-public.js?v=20250223a"></script>
 </body>
 </html>

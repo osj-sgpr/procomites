@@ -5,37 +5,64 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ProComitês - Comitês do Tocantins</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="./styles.css?v=20260222l" />
+  <link rel="stylesheet" href="./styles.css?v=20250223a" />
 </head>
 <body data-page="comites">
-  <div class="container site-shell">
-    <header class="site-header">
-      <div class="brand">
-        <h1>ProComitês</h1>
-        <p>Portal do Projeto ProComitês</p>
-      </div>
-      <nav class="portal-nav">
-        <a class="portal-nav-link" href="./index.html">Home</a>
-        <a class="portal-nav-link" href="./noticias.html">Notícias</a>
-        <a class="portal-nav-link active" href="./comites.html">Comitês do Tocantins</a>
-        <a class="portal-nav-link" href="./fale-conosco.html">Fale Conosco</a>
-        <a class="portal-nav-link" href="./painel.html">Painel</a>
-      </nav>
-    </header>
 
+  <div class="site-top-bar">
+    <div class="container">
+      <header>
+        <div class="brand">
+          <h1>ProComitês</h1>
+          <p>Portal dos Comitês de Bacias Hidrográficas do Tocantins</p>
+        </div>
+      </header>
+    </div>
+  </div>
+
+  <div class="site-nav-bar">
+    <div class="container">
+      <nav>
+        <a class="nav-link" href="./index.html">Home</a>
+        <a class="nav-link" href="./noticias.html">Notícias</a>
+        <a class="nav-link active" href="./comites.html">Comitês do Tocantins</a>
+        <a class="nav-link" href="./fale-conosco.html">Fale Conosco</a>
+        <a class="nav-link" href="./painel.html">Painel</a>
+      </nav>
+    </div>
+  </div>
+
+  <div class="container">
     <div id="publicNotice" class="notice hidden"></div>
 
-    <section class="card" style="margin-bottom: 14px;">
-      <div style="font-weight: 700;">Comitês do Tocantins</div>
-      <div class="small">Acompanhamento de reuniões públicas por comitê.</div>
+    <section class="page-header-card">
+      <div class="section-title">Comitês do Tocantins</div>
+      <p class="section-subtitle">Acompanhamento de reuniões públicas por comitê.</p>
     </section>
 
     <section id="comitesGrid" class="comites-grid"></section>
   </div>
 
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          ProComitês
+          <span>Portal dos Comitês de Bacias Hidrográficas do Tocantins</span>
+        </div>
+        <div class="footer-links">
+          <a href="./index.html">Home</a>
+          <a href="./noticias.html">Notícias</a>
+          <a href="./comites.html">Comitês</a>
+          <a href="./fale-conosco.html">Contato</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
   <script>
     window.APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPGdYJ6kYEPPDCZUaoCqyxoDvtlwQOTunvvkPP2RHjMg0TzvflUQdfMcGxE-hSTgT3/exec";
   </script>
-  <script src="./portal-public.js?v=20260222m"></script>
+  <script src="./portal-public.js?v=20250223a"></script>
 </body>
 </html>
