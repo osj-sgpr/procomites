@@ -72,28 +72,44 @@
     const bases = getApiBaseUrls();
     if (!bases.length) return Promise.reject(new Error("APPS_SCRIPT_URL não configurada."));
 
+    // Usa fallback se disponível e houver falhas anteriores
+    if (window.JsonpFallback && window.JsonpFallback.shouldUseFallback()) {
+      console.warn('Usando fallback JSONP devido a falhas anteriores.');
+      const bases = getApiBaseUrls();
+      return window.JsonpFallback.fetchFallback(bases[0], payload);
+    }
+
     if (payload && payload.acao !== "login") {
       const sid = window.__SID__;
-      if (sid) {
-        payload.sid = sid;
-        if (payload.idToken) delete payload.idToken;
-      }
+      if (sid) payload.sid = sid;
     }
 
     let lastErr = null;
     for (let i = 0; i < bases.length; i++) {
-      for (let attempt = 1; attempt <= 2; attempt++) {
+      for (let attempt = 1; attempt <= 3; attempt++) {
         try {
-          return await callJsonp(bases[i], payload, 25000 + (attempt - 1) * 5000);
+          const result = await callJsonp(bases[i], payload || {}, 25000 + ((attempt - 1) * 7000));
+          // Reset falhas em sucesso
+          if (window.JsonpFallback) window.JsonpFallback.resetFailures();
+          return result;
         } catch (e) {
           lastErr = e;
-          await new Promise((r) => setTimeout(r, 250 * attempt));
+          console.warn(`Tentativa ${attempt}/${3} falhou em ${bases[i]}:`, e.message);
+          if (attempt < 3) await new Promise(res => setTimeout(res, 1000 * attempt));
         }
       }
     }
-
-    const msg = (lastErr && lastErr.message) ? lastErr.message : "Falha ao chamar API (JSONP).";
-    throw new Error(msg + " Verifique rede/conectividade e se o Web App do Apps Script está publicado para acesso público.");
+    // Se todas falharam, tentar fallback
+    if (window.JsonpFallback) {
+      console.warn('Todas as tentativas JSONP falharam, usando fallback.');
+      try {
+        const bases = getApiBaseUrls();
+        return await window.JsonpFallback.fetchFallback(bases[0], payload);
+      } catch (fallbackErr) {
+        console.error('Fallback também falhou:', fallbackErr);
+      }
+    }
+    throw lastErr || new Error("Falha ao chamar API.");
   }
 
   function getUrlParam(name) {
