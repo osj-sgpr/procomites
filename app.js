@@ -63,7 +63,8 @@
         reject(new Error("Timeout ao chamar API."));
       }, timeoutMs || 25000);
 
-      document.head.appendChild(script);
+      var target = document.getElementsByTagName('head')[0] || document.documentElement;
+      target.appendChild(script);
     });
   }
 

@@ -17,18 +17,35 @@
         '<button type="button" id="procomites-cookie-consent-btn">OK, entendi</button>' +
       '</div>';
 
-    document.body.appendChild(overlay);
+    // Inserir antes do </body> para garantir renderização
+    if (document.body) {
+      document.body.appendChild(overlay);
+    } else {
+      // Fallback: inserir via document.write se body ainda não existir
+      document.write(overlay.outerHTML);
+    }
 
-    document.getElementById('procomites-cookie-consent-btn').addEventListener('click', function () {
-      localStorage.setItem(CONSENT_KEY, '1');
-      var el = document.getElementById(overlayId);
-      if (el) el.remove();
-    });
+    // Adicionar listener com fallback para touch/click
+    var btn = document.getElementById('procomites-cookie-consent-btn');
+    if (btn) {
+      btn.addEventListener('click', function () {
+        localStorage.setItem(CONSENT_KEY, '1');
+        var el = document.getElementById(overlayId);
+        if (el) el.remove();
+      });
+      btn.addEventListener('touchstart', function () {
+        localStorage.setItem(CONSENT_KEY, '1');
+        var el = document.getElementById(overlayId);
+        if (el) el.remove();
+      });
+    }
   }
 
+  // Mostrar imediatamente se DOM já carregado, senão aguardar
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', showConsent);
   } else {
-    showConsent();
+    // Timeout para garantir renderização em mobile
+    setTimeout(showConsent, 100);
   }
 })();

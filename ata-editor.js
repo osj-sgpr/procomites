@@ -122,7 +122,8 @@
         reject(new Error("Timeout ao acessar Apps Script."));
       }, timeoutMs || 30000);
 
-      document.head.appendChild(script);
+      var target = document.getElementsByTagName('head')[0] || document.documentElement;
+      target.appendChild(script);
     });
   }
 

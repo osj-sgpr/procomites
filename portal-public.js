@@ -55,6 +55,7 @@
       script = document.createElement("script");
       script.async = true;
       script.src = buildApiUrl(base, payload, cb);
+
       script.onerror = function () {
         clean();
         reject(new Error("Falha ao chamar API pública."));
@@ -65,7 +66,8 @@
         reject(new Error("Timeout ao chamar API pública."));
       }, timeoutMs || 30000);
 
-      document.head.appendChild(script);
+      var target = document.getElementsByTagName('head')[0] || document.documentElement;
+      target.appendChild(script);
     });
   }
 
