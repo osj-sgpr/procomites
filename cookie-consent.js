@@ -10,8 +10,10 @@
     overlay.className = 'cookie-consent-overlay';
     overlay.innerHTML = '' +
       '<div class="cookie-consent-box">' +
-        '<h2>Uso de Cookies</h2>' +
-        '<p>Este site usa cookies essenciais para autenticação (Firebase) e para garantir o funcionamento correto do sistema. Ao continuar, você concorda com o uso de cookies.</p>' +
+        '<div>' +
+          '<h2>Uso de Cookies</h2>' +
+          '<p>Este site usa cookies essenciais para autenticação (Firebase) e para garantir o funcionamento correto do sistema. Ao continuar, você concorda com o uso de cookies.</p>' +
+        '</div>' +
         '<button type="button" id="procomites-cookie-consent-btn">OK, entendi</button>' +
       '</div>';
 
