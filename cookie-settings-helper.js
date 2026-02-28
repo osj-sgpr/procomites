@@ -36,41 +36,84 @@
 
   // Tenta detectar se cookies estão realmente bloqueados
   function testCookieSupport() {
-    try {
-      // Teste de cookie básico
-      document.cookie = 'test=1; SameSite=None; Secure';
-      var basicSupported = document.cookie.indexOf('test=1') !== -1;
-      
-      // Limpa
-      document.cookie = 'test=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    var results = {
+      basic: false,
+      thirdParty: false,
+      firebase: false,
+      jsonp: false,
+      overall: false
+    };
 
-      // Teste de cookie de terceiros via iframe
+    // Teste 1: Cookie básico
+    try {
+      document.cookie = 'test_basic=1; SameSite=None; Secure';
+      results.basic = document.cookie.indexOf('test_basic=1') !== -1;
+      document.cookie = 'test_basic=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    } catch (e) {
+      results.basic = false;
+    }
+
+    // Teste 2: Cookie de terceiros via iframe
+    try {
       var iframe = document.createElement('iframe');
       iframe.style.display = 'none';
       iframe.src = 'about:blank';
       document.body.appendChild(iframe);
       
-      var thirdPartySupported = false;
-      try {
-        var doc = iframe.contentWindow.document;
-        doc.open();
-        doc.write('<script>document.cookie="third=1; SameSite=None; Secure";</script>');
-        doc.close();
-        thirdPartySupported = !!doc.cookie;
-      } catch (e) {
-        thirdPartySupported = false;
-      }
+      var doc = iframe.contentWindow.document;
+      doc.open();
+      doc.write('<script>try { document.cookie="test_third=1; SameSite=None; Secure"; window.parent.cookieTestResult = true; } catch(e) { window.parent.cookieTestResult = false; }</script>');
+      doc.close();
       
-      document.body.removeChild(iframe);
-
-      return {
-        basic: basicSupported,
-        thirdParty: thirdPartySupported,
-        overall: basicSupported && thirdPartySupported
-      };
+      // Espera um pouco e verifica
+      setTimeout(function() {
+        results.thirdParty = window.cookieTestResult === true;
+        document.body.removeChild(iframe);
+      }, 100);
     } catch (e) {
-      return { basic: false, thirdParty: false, overall: false };
+      results.thirdParty = false;
     }
+
+    // Teste 3: Firebase Auth (se disponível)
+    if (window.firebase && window.firebase.auth) {
+      try {
+        // Tenta acessar o estado de autenticação
+        var auth = window.firebase.auth();
+        results.firebase = !!auth;
+      } catch (e) {
+        results.firebase = false;
+      }
+    }
+
+    // Teste 4: JSONP (tenta uma chamada de teste)
+    try {
+      var testUrl = window.APPS_SCRIPT_URL || 'https://httpbin.org/json';
+      var testScript = document.createElement('script');
+      testScript.src = testUrl + '?callback=cookieJsonpTest';
+      testScript.onerror = function() {
+        results.jsonp = false;
+      };
+      testScript.onload = function() {
+        results.jsonp = window.cookieJsonpTest !== undefined;
+        delete window.cookieJsonpTest;
+      };
+      
+      window.cookieJsonpTest = function() {
+        results.jsonp = true;
+      };
+      
+      document.head.appendChild(testScript);
+      setTimeout(function() {
+        if (testScript.parentNode) testScript.parentNode.removeChild(testScript);
+      }, 1000);
+    } catch (e) {
+      results.jsonp = false;
+    }
+
+    // Resultado geral
+    results.overall = results.basic && results.thirdParty && results.firebase && results.jsonp;
+    
+    return results;
   }
 
   // Adiciona botão flutuante de ajuda
@@ -108,20 +151,56 @@
 
     btn.addEventListener('click', function () {
       var test = testCookieSupport();
-      var message = 'Teste de Cookies:\n\n';
-      message += 'Cookies básicos: ' + (test.basic ? '✅ OK' : '❌ Bloqueado') + '\n';
-      message += 'Cookies de terceiros: ' + (test.thirdParty ? '✅ OK' : '❌ Bloqueado') + '\n\n';
       
-      if (!test.overall) {
-        message += 'Seu navegador está bloqueando cookies necessários.\n\n';
-        message += 'Deseja abrir as configurações de cookies?';
+      // Constrói mensagem detalhada
+      var message = '🔍 DIAGNÓSTICO COMPLETO DE COOKIES\n\n';
+      message += '🍪 Cookies básicos: ' + (test.basic ? '✅ FUNCIONANDO' : '❌ BLOQUEADO') + '\n';
+      message += '🌐 Cookies de terceiros: ' + (test.thirdParty ? '✅ FUNCIONANDO' : '❌ BLOQUEADO') + '\n';
+      message += '🔥 Firebase Auth: ' + (test.firebase ? '✅ CARREGADO' : '❌ FALHANDO') + '\n';
+      message += '📡 Chamadas JSONP: ' + (test.jsonp ? '✅ FUNCIONANDO' : '❌ FALHANDO') + '\n\n';
+      
+      // Análise detalhada
+      var issues = [];
+      if (!test.basic) issues.push('Cookies básicos estão bloqueados');
+      if (!test.thirdParty) issues.push('Cookies de terceiros estão bloqueados');
+      if (!test.firebase) issues.push('Firebase Auth não está funcionando');
+      if (!test.jsonp) issues.push('Chamadas JSONP estão falhando');
+      
+      if (issues.length === 0) {
+        message += '🎉 TODOS OS SISTEMAS ESTÃO OK!\n\n';
+        message += 'Se ainda tiver problemas, pode ser outro motivo diferente de cookies.';
+      } else {
+        message += '⚠️ PROBLEMAS DETECTADOS:\n';
+        issues.forEach(function(issue, i) {
+          message += (i + 1) + '. ' + issue + '\n';
+        });
+        message += '\n';
+        
+        // Recomendações específicas
+        if (!test.basic) {
+          message += '💡 SOLUÇÃO:\n';
+          message += 'Seu navegador está bloqueando TODOS os cookies.\n';
+          message += 'Vá em configurações > privacidade > cookies e permita cookies.\n\n';
+        } else if (!test.thirdParty) {
+          message += '💡 SOLUÇÃO:\n';
+          message += 'Seu navegador permite cookies básicos mas bloqueia terceiros.\n';
+          message += 'Isso afeta Firebase e chamadas entre domínios.\n';
+          message += 'Permita cookies de terceiros nas configurações.\n\n';
+        } else if (!test.jsonp) {
+          message += '💡 SOLUÇÃO:\n';
+          message += 'JSONP está falhando (possivelmente bloqueado por CSP ou firewall).\n';
+          message += 'Tente usar outro navegador ou desativar ad-blockers.\n\n';
+        }
+        
+        message += 'Deseja abrir as configurações de cookies para corrigir?';
+      }
+      
+      if (issues.length === 0) {
+        alert(message);
+      } else {
         if (confirm(message)) {
           openCookieSettings();
         }
-      } else {
-        message += 'Cookies estão funcionando!\n\n';
-        message += 'Se ainda tiver problemas, recarregue a página.';
-        alert(message);
       }
     });
 
